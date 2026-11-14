@@ -1,0 +1,3540 @@
+{
+    "mode": "month",
+    "period": "2017-07",
+    "from": "2017-07-01",
+    "to": "2017-07-31",
+    "generated_at": "2026-11-14T18:18:13+01:00",
+    "counters": {
+        "armii_kr": {
+            "id": "armii_kr",
+            "name": "Armii Krajowej",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "bora_kom": {
+            "id": "bora_kom",
+            "name": "Bora-Komorowskiego",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "brozka": {
+            "id": "brozka",
+            "name": "Brożka",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "bulwary": {
+            "id": "bulwary",
+            "name": "Bulwary",
+            "total": 82997,
+            "daily": [
+                {
+                    "date": "2017-07-01",
+                    "count": 1718
+                },
+                {
+                    "date": "2017-07-02",
+                    "count": 1239
+                },
+                {
+                    "date": "2017-07-03",
+                    "count": 2664
+                },
+                {
+                    "date": "2017-07-04",
+                    "count": 3016
+                },
+                {
+                    "date": "2017-07-05",
+                    "count": 2375
+                },
+                {
+                    "date": "2017-07-06",
+                    "count": 3139
+                },
+                {
+                    "date": "2017-07-07",
+                    "count": 1861
+                },
+                {
+                    "date": "2017-07-08",
+                    "count": 1521
+                },
+                {
+                    "date": "2017-07-09",
+                    "count": 4059
+                },
+                {
+                    "date": "2017-07-10",
+                    "count": 2430
+                },
+                {
+                    "date": "2017-07-11",
+                    "count": 1759
+                },
+                {
+                    "date": "2017-07-12",
+                    "count": 3388
+                },
+                {
+                    "date": "2017-07-13",
+                    "count": 1442
+                },
+                {
+                    "date": "2017-07-14",
+                    "count": 2760
+                },
+                {
+                    "date": "2017-07-15",
+                    "count": 1597
+                },
+                {
+                    "date": "2017-07-16",
+                    "count": 4445
+                },
+                {
+                    "date": "2017-07-17",
+                    "count": 2489
+                },
+                {
+                    "date": "2017-07-18",
+                    "count": 3990
+                },
+                {
+                    "date": "2017-07-19",
+                    "count": 3686
+                },
+                {
+                    "date": "2017-07-20",
+                    "count": 3790
+                },
+                {
+                    "date": "2017-07-21",
+                    "count": 2074
+                },
+                {
+                    "date": "2017-07-22",
+                    "count": 3148
+                },
+                {
+                    "date": "2017-07-23",
+                    "count": 2327
+                },
+                {
+                    "date": "2017-07-24",
+                    "count": 2706
+                },
+                {
+                    "date": "2017-07-25",
+                    "count": 1834
+                },
+                {
+                    "date": "2017-07-26",
+                    "count": 3122
+                },
+                {
+                    "date": "2017-07-27",
+                    "count": 2973
+                },
+                {
+                    "date": "2017-07-28",
+                    "count": 1960
+                },
+                {
+                    "date": "2017-07-29",
+                    "count": 3276
+                },
+                {
+                    "date": "2017-07-30",
+                    "count": 3353
+                },
+                {
+                    "date": "2017-07-31",
+                    "count": 2856
+                }
+            ],
+            "hourly_weekday": [
+                {
+                    "hour": "00",
+                    "avg": 8,
+                    "median": 7,
+                    "min": 1,
+                    "max": 20
+                },
+                {
+                    "hour": "01",
+                    "avg": 3,
+                    "median": 3,
+                    "min": 1,
+                    "max": 9
+                },
+                {
+                    "hour": "02",
+                    "avg": 3,
+                    "median": 2,
+                    "min": 0,
+                    "max": 8
+                },
+                {
+                    "hour": "03",
+                    "avg": 1,
+                    "median": 1,
+                    "min": 0,
+                    "max": 4
+                },
+                {
+                    "hour": "04",
+                    "avg": 2,
+                    "median": 2,
+                    "min": 0,
+                    "max": 5
+                },
+                {
+                    "hour": "05",
+                    "avg": 19,
+                    "median": 19,
+                    "min": 8,
+                    "max": 30
+                },
+                {
+                    "hour": "06",
+                    "avg": 93,
+                    "median": 99,
+                    "min": 40,
+                    "max": 115
+                },
+                {
+                    "hour": "07",
+                    "avg": 189,
+                    "median": 195,
+                    "min": 62,
+                    "max": 249
+                },
+                {
+                    "hour": "08",
+                    "avg": 185,
+                    "median": 196,
+                    "min": 73,
+                    "max": 245
+                },
+                {
+                    "hour": "09",
+                    "avg": 117,
+                    "median": 121,
+                    "min": 36,
+                    "max": 167
+                },
+                {
+                    "hour": "10",
+                    "avg": 86,
+                    "median": 98,
+                    "min": 12,
+                    "max": 122
+                },
+                {
+                    "hour": "11",
+                    "avg": 87,
+                    "median": 90,
+                    "min": 13,
+                    "max": 136
+                },
+                {
+                    "hour": "12",
+                    "avg": 89,
+                    "median": 97,
+                    "min": 17,
+                    "max": 149
+                },
+                {
+                    "hour": "13",
+                    "avg": 97,
+                    "median": 103,
+                    "min": 20,
+                    "max": 159
+                },
+                {
+                    "hour": "14",
+                    "avg": 109,
+                    "median": 119,
+                    "min": 39,
+                    "max": 149
+                },
+                {
+                    "hour": "15",
+                    "avg": 160,
+                    "median": 166,
+                    "min": 74,
+                    "max": 215
+                },
+                {
+                    "hour": "16",
+                    "avg": 249,
+                    "median": 264,
+                    "min": 138,
+                    "max": 352
+                },
+                {
+                    "hour": "17",
+                    "avg": 285,
+                    "median": 294,
+                    "min": 185,
+                    "max": 433
+                },
+                {
+                    "hour": "18",
+                    "avg": 264,
+                    "median": 274,
+                    "min": 128,
+                    "max": 437
+                },
+                {
+                    "hour": "19",
+                    "avg": 232,
+                    "median": 226,
+                    "min": 74,
+                    "max": 395
+                },
+                {
+                    "hour": "20",
+                    "avg": 189,
+                    "median": 176,
+                    "min": 55,
+                    "max": 359
+                },
+                {
+                    "hour": "21",
+                    "avg": 127,
+                    "median": 121,
+                    "min": 38,
+                    "max": 323
+                },
+                {
+                    "hour": "22",
+                    "avg": 62,
+                    "median": 64,
+                    "min": 15,
+                    "max": 141
+                },
+                {
+                    "hour": "23",
+                    "avg": 24,
+                    "median": 22,
+                    "min": 6,
+                    "max": 60
+                }
+            ],
+            "hourly_weekend": [
+                {
+                    "hour": "00",
+                    "avg": 10,
+                    "median": 11,
+                    "min": 3,
+                    "max": 15
+                },
+                {
+                    "hour": "01",
+                    "avg": 4,
+                    "median": 5,
+                    "min": 1,
+                    "max": 7
+                },
+                {
+                    "hour": "02",
+                    "avg": 3,
+                    "median": 3,
+                    "min": 0,
+                    "max": 7
+                },
+                {
+                    "hour": "03",
+                    "avg": 2,
+                    "median": 1,
+                    "min": 0,
+                    "max": 3
+                },
+                {
+                    "hour": "04",
+                    "avg": 3,
+                    "median": 3,
+                    "min": 1,
+                    "max": 6
+                },
+                {
+                    "hour": "05",
+                    "avg": 5,
+                    "median": 4,
+                    "min": 2,
+                    "max": 12
+                },
+                {
+                    "hour": "06",
+                    "avg": 16,
+                    "median": 17,
+                    "min": 5,
+                    "max": 30
+                },
+                {
+                    "hour": "07",
+                    "avg": 30,
+                    "median": 31,
+                    "min": 7,
+                    "max": 48
+                },
+                {
+                    "hour": "08",
+                    "avg": 49,
+                    "median": 55,
+                    "min": 20,
+                    "max": 65
+                },
+                {
+                    "hour": "09",
+                    "avg": 91,
+                    "median": 109,
+                    "min": 23,
+                    "max": 135
+                },
+                {
+                    "hour": "10",
+                    "avg": 132,
+                    "median": 159,
+                    "min": 33,
+                    "max": 211
+                },
+                {
+                    "hour": "11",
+                    "avg": 193,
+                    "median": 223,
+                    "min": 21,
+                    "max": 295
+                },
+                {
+                    "hour": "12",
+                    "avg": 195,
+                    "median": 231,
+                    "min": 17,
+                    "max": 375
+                },
+                {
+                    "hour": "13",
+                    "avg": 221,
+                    "median": 258,
+                    "min": 21,
+                    "max": 352
+                },
+                {
+                    "hour": "14",
+                    "avg": 214,
+                    "median": 215,
+                    "min": 28,
+                    "max": 371
+                },
+                {
+                    "hour": "15",
+                    "avg": 217,
+                    "median": 189,
+                    "min": 66,
+                    "max": 444
+                },
+                {
+                    "hour": "16",
+                    "avg": 227,
+                    "median": 207,
+                    "min": 50,
+                    "max": 480
+                },
+                {
+                    "hour": "17",
+                    "avg": 241,
+                    "median": 224,
+                    "min": 46,
+                    "max": 551
+                },
+                {
+                    "hour": "18",
+                    "avg": 247,
+                    "median": 265,
+                    "min": 30,
+                    "max": 481
+                },
+                {
+                    "hour": "19",
+                    "avg": 228,
+                    "median": 233,
+                    "min": 57,
+                    "max": 333
+                },
+                {
+                    "hour": "20",
+                    "avg": 179,
+                    "median": 180,
+                    "min": 84,
+                    "max": 258
+                },
+                {
+                    "hour": "21",
+                    "avg": 100,
+                    "median": 96,
+                    "min": 41,
+                    "max": 154
+                },
+                {
+                    "hour": "22",
+                    "avg": 44,
+                    "median": 48,
+                    "min": 20,
+                    "max": 62
+                },
+                {
+                    "hour": "23",
+                    "avg": 18,
+                    "median": 20,
+                    "min": 4,
+                    "max": 23
+                }
+            ],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 2629,
+                    "median": 2664
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 2650,
+                    "median": 2425
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 3143,
+                    "median": 3255
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 2836,
+                    "median": 3056
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 2164,
+                    "median": 2017
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 2252,
+                    "median": 1718
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 3085,
+                    "median": 3353
+                }
+            ],
+            "best_day": {
+                "date": "2017-07-16",
+                "weekday": "Nie",
+                "count": 4445
+            }
+        },
+        "dworzec_gl": {
+            "id": "dworzec_gl",
+            "name": "Dworzec Główny",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "grzegorzecka": {
+            "id": "grzegorzecka",
+            "name": "Grzegórzecka",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "jancarza": {
+            "id": "jancarza",
+            "name": "Jancarza",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "kamienskiego": {
+            "id": "kamienskiego",
+            "name": "Kamieńskiego",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "klimeckiego": {
+            "id": "klimeckiego",
+            "name": "Klimeckiego",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "kopernika": {
+            "id": "kopernika",
+            "name": "Kopernika",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "kotlarska": {
+            "id": "kotlarska",
+            "name": "Kotlarska",
+            "total": 77561,
+            "daily": [
+                {
+                    "date": "2017-07-01",
+                    "count": 1238
+                },
+                {
+                    "date": "2017-07-02",
+                    "count": 939
+                },
+                {
+                    "date": "2017-07-03",
+                    "count": 3146
+                },
+                {
+                    "date": "2017-07-04",
+                    "count": 3194
+                },
+                {
+                    "date": "2017-07-05",
+                    "count": 2901
+                },
+                {
+                    "date": "2017-07-06",
+                    "count": 3113
+                },
+                {
+                    "date": "2017-07-07",
+                    "count": 2347
+                },
+                {
+                    "date": "2017-07-08",
+                    "count": 955
+                },
+                {
+                    "date": "2017-07-09",
+                    "count": 2194
+                },
+                {
+                    "date": "2017-07-10",
+                    "count": 2771
+                },
+                {
+                    "date": "2017-07-11",
+                    "count": 2139
+                },
+                {
+                    "date": "2017-07-12",
+                    "count": 3589
+                },
+                {
+                    "date": "2017-07-13",
+                    "count": 1520
+                },
+                {
+                    "date": "2017-07-14",
+                    "count": 2850
+                },
+                {
+                    "date": "2017-07-15",
+                    "count": 996
+                },
+                {
+                    "date": "2017-07-16",
+                    "count": 2119
+                },
+                {
+                    "date": "2017-07-17",
+                    "count": 2868
+                },
+                {
+                    "date": "2017-07-18",
+                    "count": 3908
+                },
+                {
+                    "date": "2017-07-19",
+                    "count": 3738
+                },
+                {
+                    "date": "2017-07-20",
+                    "count": 4182
+                },
+                {
+                    "date": "2017-07-21",
+                    "count": 2435
+                },
+                {
+                    "date": "2017-07-22",
+                    "count": 1827
+                },
+                {
+                    "date": "2017-07-23",
+                    "count": 1439
+                },
+                {
+                    "date": "2017-07-24",
+                    "count": 3104
+                },
+                {
+                    "date": "2017-07-25",
+                    "count": 2488
+                },
+                {
+                    "date": "2017-07-26",
+                    "count": 3228
+                },
+                {
+                    "date": "2017-07-27",
+                    "count": 3266
+                },
+                {
+                    "date": "2017-07-28",
+                    "count": 2230
+                },
+                {
+                    "date": "2017-07-29",
+                    "count": 1802
+                },
+                {
+                    "date": "2017-07-30",
+                    "count": 1888
+                },
+                {
+                    "date": "2017-07-31",
+                    "count": 3147
+                }
+            ],
+            "hourly_weekday": [
+                {
+                    "hour": "00",
+                    "avg": 11,
+                    "median": 10,
+                    "min": 1,
+                    "max": 21
+                },
+                {
+                    "hour": "01",
+                    "avg": 4,
+                    "median": 4,
+                    "min": 0,
+                    "max": 10
+                },
+                {
+                    "hour": "02",
+                    "avg": 3,
+                    "median": 3,
+                    "min": 1,
+                    "max": 7
+                },
+                {
+                    "hour": "03",
+                    "avg": 3,
+                    "median": 3,
+                    "min": 0,
+                    "max": 8
+                },
+                {
+                    "hour": "04",
+                    "avg": 4,
+                    "median": 4,
+                    "min": 1,
+                    "max": 7
+                },
+                {
+                    "hour": "05",
+                    "avg": 32,
+                    "median": 32,
+                    "min": 12,
+                    "max": 39
+                },
+                {
+                    "hour": "06",
+                    "avg": 112,
+                    "median": 116,
+                    "min": 42,
+                    "max": 136
+                },
+                {
+                    "hour": "07",
+                    "avg": 262,
+                    "median": 270,
+                    "min": 102,
+                    "max": 327
+                },
+                {
+                    "hour": "08",
+                    "avg": 297,
+                    "median": 312,
+                    "min": 100,
+                    "max": 392
+                },
+                {
+                    "hour": "09",
+                    "avg": 160,
+                    "median": 165,
+                    "min": 45,
+                    "max": 214
+                },
+                {
+                    "hour": "10",
+                    "avg": 82,
+                    "median": 84,
+                    "min": 23,
+                    "max": 119
+                },
+                {
+                    "hour": "11",
+                    "avg": 78,
+                    "median": 86,
+                    "min": 20,
+                    "max": 123
+                },
+                {
+                    "hour": "12",
+                    "avg": 78,
+                    "median": 85,
+                    "min": 32,
+                    "max": 102
+                },
+                {
+                    "hour": "13",
+                    "avg": 89,
+                    "median": 95,
+                    "min": 19,
+                    "max": 131
+                },
+                {
+                    "hour": "14",
+                    "avg": 113,
+                    "median": 115,
+                    "min": 57,
+                    "max": 149
+                },
+                {
+                    "hour": "15",
+                    "avg": 203,
+                    "median": 217,
+                    "min": 98,
+                    "max": 281
+                },
+                {
+                    "hour": "16",
+                    "avg": 319,
+                    "median": 338,
+                    "min": 164,
+                    "max": 393
+                },
+                {
+                    "hour": "17",
+                    "avg": 340,
+                    "median": 356,
+                    "min": 202,
+                    "max": 447
+                },
+                {
+                    "hour": "18",
+                    "avg": 236,
+                    "median": 235,
+                    "min": 151,
+                    "max": 352
+                },
+                {
+                    "hour": "19",
+                    "avg": 180,
+                    "median": 179,
+                    "min": 83,
+                    "max": 315
+                },
+                {
+                    "hour": "20",
+                    "avg": 150,
+                    "median": 144,
+                    "min": 59,
+                    "max": 352
+                },
+                {
+                    "hour": "21",
+                    "avg": 114,
+                    "median": 106,
+                    "min": 37,
+                    "max": 429
+                },
+                {
+                    "hour": "22",
+                    "avg": 65,
+                    "median": 60,
+                    "min": 11,
+                    "max": 155
+                },
+                {
+                    "hour": "23",
+                    "avg": 27,
+                    "median": 25,
+                    "min": 7,
+                    "max": 68
+                }
+            ],
+            "hourly_weekend": [
+                {
+                    "hour": "00",
+                    "avg": 12,
+                    "median": 11,
+                    "min": 6,
+                    "max": 16
+                },
+                {
+                    "hour": "01",
+                    "avg": 6,
+                    "median": 6,
+                    "min": 2,
+                    "max": 11
+                },
+                {
+                    "hour": "02",
+                    "avg": 4,
+                    "median": 4,
+                    "min": 1,
+                    "max": 9
+                },
+                {
+                    "hour": "03",
+                    "avg": 3,
+                    "median": 4,
+                    "min": 1,
+                    "max": 6
+                },
+                {
+                    "hour": "04",
+                    "avg": 3,
+                    "median": 3,
+                    "min": 1,
+                    "max": 5
+                },
+                {
+                    "hour": "05",
+                    "avg": 10,
+                    "median": 9,
+                    "min": 4,
+                    "max": 19
+                },
+                {
+                    "hour": "06",
+                    "avg": 15,
+                    "median": 15,
+                    "min": 8,
+                    "max": 25
+                },
+                {
+                    "hour": "07",
+                    "avg": 20,
+                    "median": 20,
+                    "min": 11,
+                    "max": 30
+                },
+                {
+                    "hour": "08",
+                    "avg": 31,
+                    "median": 29,
+                    "min": 20,
+                    "max": 48
+                },
+                {
+                    "hour": "09",
+                    "avg": 53,
+                    "median": 59,
+                    "min": 28,
+                    "max": 68
+                },
+                {
+                    "hour": "10",
+                    "avg": 79,
+                    "median": 89,
+                    "min": 28,
+                    "max": 122
+                },
+                {
+                    "hour": "11",
+                    "avg": 102,
+                    "median": 117,
+                    "min": 19,
+                    "max": 151
+                },
+                {
+                    "hour": "12",
+                    "avg": 110,
+                    "median": 125,
+                    "min": 20,
+                    "max": 176
+                },
+                {
+                    "hour": "13",
+                    "avg": 110,
+                    "median": 126,
+                    "min": 22,
+                    "max": 160
+                },
+                {
+                    "hour": "14",
+                    "avg": 118,
+                    "median": 123,
+                    "min": 28,
+                    "max": 183
+                },
+                {
+                    "hour": "15",
+                    "avg": 117,
+                    "median": 108,
+                    "min": 42,
+                    "max": 207
+                },
+                {
+                    "hour": "16",
+                    "avg": 119,
+                    "median": 109,
+                    "min": 42,
+                    "max": 231
+                },
+                {
+                    "hour": "17",
+                    "avg": 124,
+                    "median": 128,
+                    "min": 24,
+                    "max": 214
+                },
+                {
+                    "hour": "18",
+                    "avg": 132,
+                    "median": 143,
+                    "min": 23,
+                    "max": 218
+                },
+                {
+                    "hour": "19",
+                    "avg": 128,
+                    "median": 120,
+                    "min": 45,
+                    "max": 192
+                },
+                {
+                    "hour": "20",
+                    "avg": 104,
+                    "median": 107,
+                    "min": 41,
+                    "max": 155
+                },
+                {
+                    "hour": "21",
+                    "avg": 75,
+                    "median": 76,
+                    "min": 41,
+                    "max": 107
+                },
+                {
+                    "hour": "22",
+                    "avg": 46,
+                    "median": 44,
+                    "min": 15,
+                    "max": 85
+                },
+                {
+                    "hour": "23",
+                    "avg": 21,
+                    "median": 24,
+                    "min": 7,
+                    "max": 30
+                }
+            ],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 3007,
+                    "median": 3104
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 2932,
+                    "median": 2841
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 3364,
+                    "median": 3409
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 3020,
+                    "median": 3190
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 2466,
+                    "median": 2391
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 1364,
+                    "median": 1238
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 1716,
+                    "median": 1888
+                }
+            ],
+            "best_day": {
+                "date": "2017-07-20",
+                "weekday": "Czw",
+                "count": 4182
+            }
+        },
+        "mogilska": {
+            "id": "mogilska",
+            "name": "Mogilska",
+            "total": 99128,
+            "daily": [
+                {
+                    "date": "2017-07-01",
+                    "count": 1560
+                },
+                {
+                    "date": "2017-07-02",
+                    "count": 1268
+                },
+                {
+                    "date": "2017-07-03",
+                    "count": 4117
+                },
+                {
+                    "date": "2017-07-04",
+                    "count": 4267
+                },
+                {
+                    "date": "2017-07-05",
+                    "count": 3910
+                },
+                {
+                    "date": "2017-07-06",
+                    "count": 4247
+                },
+                {
+                    "date": "2017-07-07",
+                    "count": 3327
+                },
+                {
+                    "date": "2017-07-08",
+                    "count": 1393
+                },
+                {
+                    "date": "2017-07-09",
+                    "count": 2554
+                },
+                {
+                    "date": "2017-07-10",
+                    "count": 3689
+                },
+                {
+                    "date": "2017-07-11",
+                    "count": 2968
+                },
+                {
+                    "date": "2017-07-12",
+                    "count": 4607
+                },
+                {
+                    "date": "2017-07-13",
+                    "count": 2162
+                },
+                {
+                    "date": "2017-07-14",
+                    "count": 3732
+                },
+                {
+                    "date": "2017-07-15",
+                    "count": 1332
+                },
+                {
+                    "date": "2017-07-16",
+                    "count": 2477
+                },
+                {
+                    "date": "2017-07-17",
+                    "count": 3801
+                },
+                {
+                    "date": "2017-07-18",
+                    "count": 4717
+                },
+                {
+                    "date": "2017-07-19",
+                    "count": 4555
+                },
+                {
+                    "date": "2017-07-20",
+                    "count": 4567
+                },
+                {
+                    "date": "2017-07-21",
+                    "count": 3026
+                },
+                {
+                    "date": "2017-07-22",
+                    "count": 2209
+                },
+                {
+                    "date": "2017-07-23",
+                    "count": 1768
+                },
+                {
+                    "date": "2017-07-24",
+                    "count": 4031
+                },
+                {
+                    "date": "2017-07-25",
+                    "count": 3178
+                },
+                {
+                    "date": "2017-07-26",
+                    "count": 4031
+                },
+                {
+                    "date": "2017-07-27",
+                    "count": 4154
+                },
+                {
+                    "date": "2017-07-28",
+                    "count": 3076
+                },
+                {
+                    "date": "2017-07-29",
+                    "count": 2352
+                },
+                {
+                    "date": "2017-07-30",
+                    "count": 2049
+                },
+                {
+                    "date": "2017-07-31",
+                    "count": 4004
+                }
+            ],
+            "hourly_weekday": [
+                {
+                    "hour": "00",
+                    "avg": 23,
+                    "median": 22,
+                    "min": 12,
+                    "max": 40
+                },
+                {
+                    "hour": "01",
+                    "avg": 8,
+                    "median": 8,
+                    "min": 1,
+                    "max": 18
+                },
+                {
+                    "hour": "02",
+                    "avg": 5,
+                    "median": 4,
+                    "min": 2,
+                    "max": 9
+                },
+                {
+                    "hour": "03",
+                    "avg": 4,
+                    "median": 4,
+                    "min": 0,
+                    "max": 8
+                },
+                {
+                    "hour": "04",
+                    "avg": 5,
+                    "median": 4,
+                    "min": 3,
+                    "max": 7
+                },
+                {
+                    "hour": "05",
+                    "avg": 38,
+                    "median": 39,
+                    "min": 15,
+                    "max": 49
+                },
+                {
+                    "hour": "06",
+                    "avg": 169,
+                    "median": 175,
+                    "min": 85,
+                    "max": 209
+                },
+                {
+                    "hour": "07",
+                    "avg": 382,
+                    "median": 391,
+                    "min": 190,
+                    "max": 457
+                },
+                {
+                    "hour": "08",
+                    "avg": 357,
+                    "median": 376,
+                    "min": 132,
+                    "max": 419
+                },
+                {
+                    "hour": "09",
+                    "avg": 209,
+                    "median": 221,
+                    "min": 77,
+                    "max": 268
+                },
+                {
+                    "hour": "10",
+                    "avg": 127,
+                    "median": 133,
+                    "min": 51,
+                    "max": 167
+                },
+                {
+                    "hour": "11",
+                    "avg": 109,
+                    "median": 120,
+                    "min": 40,
+                    "max": 151
+                },
+                {
+                    "hour": "12",
+                    "avg": 115,
+                    "median": 123,
+                    "min": 47,
+                    "max": 158
+                },
+                {
+                    "hour": "13",
+                    "avg": 128,
+                    "median": 135,
+                    "min": 38,
+                    "max": 165
+                },
+                {
+                    "hour": "14",
+                    "avg": 157,
+                    "median": 162,
+                    "min": 80,
+                    "max": 200
+                },
+                {
+                    "hour": "15",
+                    "avg": 273,
+                    "median": 273,
+                    "min": 156,
+                    "max": 350
+                },
+                {
+                    "hour": "16",
+                    "avg": 386,
+                    "median": 405,
+                    "min": 225,
+                    "max": 482
+                },
+                {
+                    "hour": "17",
+                    "avg": 383,
+                    "median": 413,
+                    "min": 242,
+                    "max": 506
+                },
+                {
+                    "hour": "18",
+                    "avg": 288,
+                    "median": 309,
+                    "min": 193,
+                    "max": 415
+                },
+                {
+                    "hour": "19",
+                    "avg": 214,
+                    "median": 199,
+                    "min": 121,
+                    "max": 310
+                },
+                {
+                    "hour": "20",
+                    "avg": 181,
+                    "median": 190,
+                    "min": 78,
+                    "max": 298
+                },
+                {
+                    "hour": "21",
+                    "avg": 135,
+                    "median": 130,
+                    "min": 74,
+                    "max": 268
+                },
+                {
+                    "hour": "22",
+                    "avg": 79,
+                    "median": 82,
+                    "min": 33,
+                    "max": 135
+                },
+                {
+                    "hour": "23",
+                    "avg": 42,
+                    "median": 39,
+                    "min": 20,
+                    "max": 67
+                }
+            ],
+            "hourly_weekend": [
+                {
+                    "hour": "00",
+                    "avg": 27,
+                    "median": 27,
+                    "min": 15,
+                    "max": 36
+                },
+                {
+                    "hour": "01",
+                    "avg": 12,
+                    "median": 12,
+                    "min": 8,
+                    "max": 23
+                },
+                {
+                    "hour": "02",
+                    "avg": 6,
+                    "median": 6,
+                    "min": 2,
+                    "max": 8
+                },
+                {
+                    "hour": "03",
+                    "avg": 5,
+                    "median": 6,
+                    "min": 1,
+                    "max": 9
+                },
+                {
+                    "hour": "04",
+                    "avg": 4,
+                    "median": 5,
+                    "min": 1,
+                    "max": 8
+                },
+                {
+                    "hour": "05",
+                    "avg": 13,
+                    "median": 12,
+                    "min": 8,
+                    "max": 19
+                },
+                {
+                    "hour": "06",
+                    "avg": 27,
+                    "median": 27,
+                    "min": 14,
+                    "max": 37
+                },
+                {
+                    "hour": "07",
+                    "avg": 34,
+                    "median": 35,
+                    "min": 18,
+                    "max": 47
+                },
+                {
+                    "hour": "08",
+                    "avg": 53,
+                    "median": 52,
+                    "min": 21,
+                    "max": 84
+                },
+                {
+                    "hour": "09",
+                    "avg": 80,
+                    "median": 86,
+                    "min": 36,
+                    "max": 112
+                },
+                {
+                    "hour": "10",
+                    "avg": 99,
+                    "median": 112,
+                    "min": 40,
+                    "max": 141
+                },
+                {
+                    "hour": "11",
+                    "avg": 112,
+                    "median": 130,
+                    "min": 27,
+                    "max": 155
+                },
+                {
+                    "hour": "12",
+                    "avg": 122,
+                    "median": 124,
+                    "min": 29,
+                    "max": 193
+                },
+                {
+                    "hour": "13",
+                    "avg": 125,
+                    "median": 133,
+                    "min": 28,
+                    "max": 222
+                },
+                {
+                    "hour": "14",
+                    "avg": 132,
+                    "median": 138,
+                    "min": 40,
+                    "max": 197
+                },
+                {
+                    "hour": "15",
+                    "avg": 134,
+                    "median": 118,
+                    "min": 58,
+                    "max": 240
+                },
+                {
+                    "hour": "16",
+                    "avg": 137,
+                    "median": 125,
+                    "min": 66,
+                    "max": 274
+                },
+                {
+                    "hour": "17",
+                    "avg": 131,
+                    "median": 125,
+                    "min": 37,
+                    "max": 222
+                },
+                {
+                    "hour": "18",
+                    "avg": 163,
+                    "median": 165,
+                    "min": 58,
+                    "max": 235
+                },
+                {
+                    "hour": "19",
+                    "avg": 154,
+                    "median": 157,
+                    "min": 52,
+                    "max": 205
+                },
+                {
+                    "hour": "20",
+                    "avg": 124,
+                    "median": 127,
+                    "min": 55,
+                    "max": 191
+                },
+                {
+                    "hour": "21",
+                    "avg": 101,
+                    "median": 104,
+                    "min": 59,
+                    "max": 147
+                },
+                {
+                    "hour": "22",
+                    "avg": 65,
+                    "median": 58,
+                    "min": 35,
+                    "max": 101
+                },
+                {
+                    "hour": "23",
+                    "avg": 39,
+                    "median": 40,
+                    "min": 23,
+                    "max": 60
+                }
+            ],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 3928,
+                    "median": 4004
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 3783,
+                    "median": 3723
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 4276,
+                    "median": 4293
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 3783,
+                    "median": 4201
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 3290,
+                    "median": 3202
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 1769,
+                    "median": 1560
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 2023,
+                    "median": 2049
+                }
+            ],
+            "best_day": {
+                "date": "2017-07-18",
+                "weekday": "Wto",
+                "count": 4717
+            }
+        },
+        "monte_cass": {
+            "id": "monte_cass",
+            "name": "Monte Cassino",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "nawojki": {
+            "id": "nawojki",
+            "name": "Nawojki",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "niepolomska": {
+            "id": "niepolomska",
+            "name": "Niepołomska",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "nowohucka": {
+            "id": "nowohucka",
+            "name": "Nowohucka",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "smolensk": {
+            "id": "smolensk",
+            "name": "Smoleńsk",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "tyniecka": {
+            "id": "tyniecka",
+            "name": "Tyniecka",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "wadowicka": {
+            "id": "wadowicka",
+            "name": "Wadowicka",
+            "total": 23421,
+            "daily": [
+                {
+                    "date": "2017-07-01",
+                    "count": 526
+                },
+                {
+                    "date": "2017-07-02",
+                    "count": 392
+                },
+                {
+                    "date": "2017-07-03",
+                    "count": 1122
+                },
+                {
+                    "date": "2017-07-04",
+                    "count": 981
+                },
+                {
+                    "date": "2017-07-05",
+                    "count": 952
+                },
+                {
+                    "date": "2017-07-06",
+                    "count": 1092
+                },
+                {
+                    "date": "2017-07-07",
+                    "count": 921
+                },
+                {
+                    "date": "2017-07-08",
+                    "count": 496
+                },
+                {
+                    "date": "2017-07-09",
+                    "count": 571
+                },
+                {
+                    "date": "2017-07-10",
+                    "count": 951
+                },
+                {
+                    "date": "2017-07-11",
+                    "count": 654
+                },
+                {
+                    "date": "2017-07-12",
+                    "count": 1026
+                },
+                {
+                    "date": "2017-07-13",
+                    "count": 599
+                },
+                {
+                    "date": "2017-07-14",
+                    "count": 1021
+                },
+                {
+                    "date": "2017-07-15",
+                    "count": 355
+                },
+                {
+                    "date": "2017-07-16",
+                    "count": 492
+                },
+                {
+                    "date": "2017-07-17",
+                    "count": 1037
+                },
+                {
+                    "date": "2017-07-18",
+                    "count": 1043
+                },
+                {
+                    "date": "2017-07-19",
+                    "count": 904
+                },
+                {
+                    "date": "2017-07-20",
+                    "count": 915
+                },
+                {
+                    "date": "2017-07-21",
+                    "count": 588
+                },
+                {
+                    "date": "2017-07-22",
+                    "count": 405
+                },
+                {
+                    "date": "2017-07-23",
+                    "count": 260
+                },
+                {
+                    "date": "2017-07-24",
+                    "count": 917
+                },
+                {
+                    "date": "2017-07-25",
+                    "count": 829
+                },
+                {
+                    "date": "2017-07-26",
+                    "count": 1057
+                },
+                {
+                    "date": "2017-07-27",
+                    "count": 1047
+                },
+                {
+                    "date": "2017-07-28",
+                    "count": 736
+                },
+                {
+                    "date": "2017-07-29",
+                    "count": 500
+                },
+                {
+                    "date": "2017-07-30",
+                    "count": 359
+                },
+                {
+                    "date": "2017-07-31",
+                    "count": 673
+                }
+            ],
+            "hourly_weekday": [
+                {
+                    "hour": "00",
+                    "avg": 4,
+                    "median": 4,
+                    "min": 1,
+                    "max": 9
+                },
+                {
+                    "hour": "01",
+                    "avg": 3,
+                    "median": 3,
+                    "min": 1,
+                    "max": 6
+                },
+                {
+                    "hour": "02",
+                    "avg": 1,
+                    "median": 1,
+                    "min": 0,
+                    "max": 5
+                },
+                {
+                    "hour": "03",
+                    "avg": 1,
+                    "median": 1,
+                    "min": 0,
+                    "max": 4
+                },
+                {
+                    "hour": "04",
+                    "avg": 2,
+                    "median": 2,
+                    "min": 0,
+                    "max": 5
+                },
+                {
+                    "hour": "05",
+                    "avg": 15,
+                    "median": 15,
+                    "min": 8,
+                    "max": 20
+                },
+                {
+                    "hour": "06",
+                    "avg": 47,
+                    "median": 49,
+                    "min": 16,
+                    "max": 64
+                },
+                {
+                    "hour": "07",
+                    "avg": 99,
+                    "median": 102,
+                    "min": 42,
+                    "max": 129
+                },
+                {
+                    "hour": "08",
+                    "avg": 100,
+                    "median": 108,
+                    "min": 51,
+                    "max": 126
+                },
+                {
+                    "hour": "09",
+                    "avg": 54,
+                    "median": 53,
+                    "min": 20,
+                    "max": 77
+                },
+                {
+                    "hour": "10",
+                    "avg": 32,
+                    "median": 32,
+                    "min": 12,
+                    "max": 48
+                },
+                {
+                    "hour": "11",
+                    "avg": 26,
+                    "median": 27,
+                    "min": 8,
+                    "max": 41
+                },
+                {
+                    "hour": "12",
+                    "avg": 30,
+                    "median": 31,
+                    "min": 17,
+                    "max": 54
+                },
+                {
+                    "hour": "13",
+                    "avg": 32,
+                    "median": 32,
+                    "min": 4,
+                    "max": 69
+                },
+                {
+                    "hour": "14",
+                    "avg": 38,
+                    "median": 37,
+                    "min": 16,
+                    "max": 71
+                },
+                {
+                    "hour": "15",
+                    "avg": 64,
+                    "median": 62,
+                    "min": 35,
+                    "max": 97
+                },
+                {
+                    "hour": "16",
+                    "avg": 94,
+                    "median": 90,
+                    "min": 50,
+                    "max": 145
+                },
+                {
+                    "hour": "17",
+                    "avg": 85,
+                    "median": 81,
+                    "min": 35,
+                    "max": 130
+                },
+                {
+                    "hour": "18",
+                    "avg": 58,
+                    "median": 52,
+                    "min": 35,
+                    "max": 91
+                },
+                {
+                    "hour": "19",
+                    "avg": 39,
+                    "median": 35,
+                    "min": 19,
+                    "max": 62
+                },
+                {
+                    "hour": "20",
+                    "avg": 32,
+                    "median": 29,
+                    "min": 19,
+                    "max": 51
+                },
+                {
+                    "hour": "21",
+                    "avg": 24,
+                    "median": 22,
+                    "min": 10,
+                    "max": 44
+                },
+                {
+                    "hour": "22",
+                    "avg": 18,
+                    "median": 17,
+                    "min": 7,
+                    "max": 31
+                },
+                {
+                    "hour": "23",
+                    "avg": 8,
+                    "median": 8,
+                    "min": 2,
+                    "max": 15
+                }
+            ],
+            "hourly_weekend": [
+                {
+                    "hour": "00",
+                    "avg": 4,
+                    "median": 4,
+                    "min": 0,
+                    "max": 10
+                },
+                {
+                    "hour": "01",
+                    "avg": 4,
+                    "median": 4,
+                    "min": 0,
+                    "max": 7
+                },
+                {
+                    "hour": "02",
+                    "avg": 2,
+                    "median": 2,
+                    "min": 0,
+                    "max": 3
+                },
+                {
+                    "hour": "03",
+                    "avg": 2,
+                    "median": 2,
+                    "min": 1,
+                    "max": 3
+                },
+                {
+                    "hour": "04",
+                    "avg": 2,
+                    "median": 2,
+                    "min": 0,
+                    "max": 7
+                },
+                {
+                    "hour": "05",
+                    "avg": 5,
+                    "median": 5,
+                    "min": 0,
+                    "max": 9
+                },
+                {
+                    "hour": "06",
+                    "avg": 7,
+                    "median": 7,
+                    "min": 1,
+                    "max": 15
+                },
+                {
+                    "hour": "07",
+                    "avg": 11,
+                    "median": 8,
+                    "min": 6,
+                    "max": 24
+                },
+                {
+                    "hour": "08",
+                    "avg": 12,
+                    "median": 12,
+                    "min": 5,
+                    "max": 28
+                },
+                {
+                    "hour": "09",
+                    "avg": 20,
+                    "median": 19,
+                    "min": 9,
+                    "max": 33
+                },
+                {
+                    "hour": "10",
+                    "avg": 24,
+                    "median": 23,
+                    "min": 8,
+                    "max": 46
+                },
+                {
+                    "hour": "11",
+                    "avg": 31,
+                    "median": 26,
+                    "min": 14,
+                    "max": 46
+                },
+                {
+                    "hour": "12",
+                    "avg": 28,
+                    "median": 27,
+                    "min": 18,
+                    "max": 47
+                },
+                {
+                    "hour": "13",
+                    "avg": 36,
+                    "median": 38,
+                    "min": 5,
+                    "max": 55
+                },
+                {
+                    "hour": "14",
+                    "avg": 35,
+                    "median": 34,
+                    "min": 12,
+                    "max": 55
+                },
+                {
+                    "hour": "15",
+                    "avg": 34,
+                    "median": 37,
+                    "min": 13,
+                    "max": 56
+                },
+                {
+                    "hour": "16",
+                    "avg": 28,
+                    "median": 28,
+                    "min": 8,
+                    "max": 53
+                },
+                {
+                    "hour": "17",
+                    "avg": 33,
+                    "median": 31,
+                    "min": 9,
+                    "max": 58
+                },
+                {
+                    "hour": "18",
+                    "avg": 28,
+                    "median": 22,
+                    "min": 18,
+                    "max": 53
+                },
+                {
+                    "hour": "19",
+                    "avg": 27,
+                    "median": 26,
+                    "min": 8,
+                    "max": 53
+                },
+                {
+                    "hour": "20",
+                    "avg": 21,
+                    "median": 19,
+                    "min": 8,
+                    "max": 42
+                },
+                {
+                    "hour": "21",
+                    "avg": 20,
+                    "median": 20,
+                    "min": 12,
+                    "max": 27
+                },
+                {
+                    "hour": "22",
+                    "avg": 16,
+                    "median": 14,
+                    "min": 8,
+                    "max": 42
+                },
+                {
+                    "hour": "23",
+                    "avg": 6,
+                    "median": 5,
+                    "min": 3,
+                    "max": 13
+                }
+            ],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 940,
+                    "median": 951
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 877,
+                    "median": 905
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 985,
+                    "median": 989
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 913,
+                    "median": 981
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 817,
+                    "median": 829
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 456,
+                    "median": 496
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 415,
+                    "median": 392
+                }
+            ],
+            "best_day": {
+                "date": "2017-07-03",
+                "weekday": "Pon",
+                "count": 1122
+            }
+        },
+        "wielicka": {
+            "id": "wielicka",
+            "name": "Wielicka",
+            "total": 33987,
+            "daily": [
+                {
+                    "date": "2017-07-01",
+                    "count": 627
+                },
+                {
+                    "date": "2017-07-02",
+                    "count": 468
+                },
+                {
+                    "date": "2017-07-03",
+                    "count": 1385
+                },
+                {
+                    "date": "2017-07-04",
+                    "count": 1410
+                },
+                {
+                    "date": "2017-07-05",
+                    "count": 1320
+                },
+                {
+                    "date": "2017-07-06",
+                    "count": 1337
+                },
+                {
+                    "date": "2017-07-07",
+                    "count": 1063
+                },
+                {
+                    "date": "2017-07-08",
+                    "count": 551
+                },
+                {
+                    "date": "2017-07-09",
+                    "count": 1062
+                },
+                {
+                    "date": "2017-07-10",
+                    "count": 1155
+                },
+                {
+                    "date": "2017-07-11",
+                    "count": 906
+                },
+                {
+                    "date": "2017-07-12",
+                    "count": 1455
+                },
+                {
+                    "date": "2017-07-13",
+                    "count": 730
+                },
+                {
+                    "date": "2017-07-14",
+                    "count": 1246
+                },
+                {
+                    "date": "2017-07-15",
+                    "count": 470
+                },
+                {
+                    "date": "2017-07-16",
+                    "count": 1051
+                },
+                {
+                    "date": "2017-07-17",
+                    "count": 1318
+                },
+                {
+                    "date": "2017-07-18",
+                    "count": 1556
+                },
+                {
+                    "date": "2017-07-19",
+                    "count": 1497
+                },
+                {
+                    "date": "2017-07-20",
+                    "count": 1529
+                },
+                {
+                    "date": "2017-07-21",
+                    "count": 924
+                },
+                {
+                    "date": "2017-07-22",
+                    "count": 885
+                },
+                {
+                    "date": "2017-07-23",
+                    "count": 682
+                },
+                {
+                    "date": "2017-07-24",
+                    "count": 1318
+                },
+                {
+                    "date": "2017-07-25",
+                    "count": 1041
+                },
+                {
+                    "date": "2017-07-26",
+                    "count": 1465
+                },
+                {
+                    "date": "2017-07-27",
+                    "count": 1456
+                },
+                {
+                    "date": "2017-07-28",
+                    "count": 1039
+                },
+                {
+                    "date": "2017-07-29",
+                    "count": 912
+                },
+                {
+                    "date": "2017-07-30",
+                    "count": 823
+                },
+                {
+                    "date": "2017-07-31",
+                    "count": 1306
+                }
+            ],
+            "hourly_weekday": [
+                {
+                    "hour": "00",
+                    "avg": 6,
+                    "median": 6,
+                    "min": 1,
+                    "max": 11
+                },
+                {
+                    "hour": "01",
+                    "avg": 3,
+                    "median": 3,
+                    "min": 0,
+                    "max": 9
+                },
+                {
+                    "hour": "02",
+                    "avg": 1,
+                    "median": 1,
+                    "min": 0,
+                    "max": 4
+                },
+                {
+                    "hour": "03",
+                    "avg": 1,
+                    "median": 1,
+                    "min": 0,
+                    "max": 6
+                },
+                {
+                    "hour": "04",
+                    "avg": 2,
+                    "median": 1,
+                    "min": 0,
+                    "max": 4
+                },
+                {
+                    "hour": "05",
+                    "avg": 14,
+                    "median": 14,
+                    "min": 7,
+                    "max": 23
+                },
+                {
+                    "hour": "06",
+                    "avg": 53,
+                    "median": 53,
+                    "min": 21,
+                    "max": 69
+                },
+                {
+                    "hour": "07",
+                    "avg": 116,
+                    "median": 121,
+                    "min": 47,
+                    "max": 143
+                },
+                {
+                    "hour": "08",
+                    "avg": 107,
+                    "median": 111,
+                    "min": 53,
+                    "max": 137
+                },
+                {
+                    "hour": "09",
+                    "avg": 68,
+                    "median": 70,
+                    "min": 29,
+                    "max": 94
+                },
+                {
+                    "hour": "10",
+                    "avg": 46,
+                    "median": 50,
+                    "min": 16,
+                    "max": 66
+                },
+                {
+                    "hour": "11",
+                    "avg": 42,
+                    "median": 49,
+                    "min": 7,
+                    "max": 59
+                },
+                {
+                    "hour": "12",
+                    "avg": 40,
+                    "median": 44,
+                    "min": 11,
+                    "max": 61
+                },
+                {
+                    "hour": "13",
+                    "avg": 47,
+                    "median": 50,
+                    "min": 15,
+                    "max": 73
+                },
+                {
+                    "hour": "14",
+                    "avg": 59,
+                    "median": 61,
+                    "min": 28,
+                    "max": 76
+                },
+                {
+                    "hour": "15",
+                    "avg": 89,
+                    "median": 95,
+                    "min": 57,
+                    "max": 108
+                },
+                {
+                    "hour": "16",
+                    "avg": 123,
+                    "median": 125,
+                    "min": 70,
+                    "max": 158
+                },
+                {
+                    "hour": "17",
+                    "avg": 121,
+                    "median": 128,
+                    "min": 86,
+                    "max": 152
+                },
+                {
+                    "hour": "18",
+                    "avg": 99,
+                    "median": 104,
+                    "min": 67,
+                    "max": 147
+                },
+                {
+                    "hour": "19",
+                    "avg": 78,
+                    "median": 71,
+                    "min": 39,
+                    "max": 129
+                },
+                {
+                    "hour": "20",
+                    "avg": 63,
+                    "median": 60,
+                    "min": 24,
+                    "max": 107
+                },
+                {
+                    "hour": "21",
+                    "avg": 42,
+                    "median": 40,
+                    "min": 19,
+                    "max": 76
+                },
+                {
+                    "hour": "22",
+                    "avg": 26,
+                    "median": 26,
+                    "min": 11,
+                    "max": 38
+                },
+                {
+                    "hour": "23",
+                    "avg": 15,
+                    "median": 14,
+                    "min": 3,
+                    "max": 26
+                }
+            ],
+            "hourly_weekend": [
+                {
+                    "hour": "00",
+                    "avg": 7,
+                    "median": 6,
+                    "min": 2,
+                    "max": 16
+                },
+                {
+                    "hour": "01",
+                    "avg": 4,
+                    "median": 3,
+                    "min": 1,
+                    "max": 7
+                },
+                {
+                    "hour": "02",
+                    "avg": 3,
+                    "median": 3,
+                    "min": 0,
+                    "max": 5
+                },
+                {
+                    "hour": "03",
+                    "avg": 1,
+                    "median": 1,
+                    "min": 0,
+                    "max": 3
+                },
+                {
+                    "hour": "04",
+                    "avg": 1,
+                    "median": 1,
+                    "min": 0,
+                    "max": 4
+                },
+                {
+                    "hour": "05",
+                    "avg": 6,
+                    "median": 6,
+                    "min": 3,
+                    "max": 9
+                },
+                {
+                    "hour": "06",
+                    "avg": 8,
+                    "median": 8,
+                    "min": 3,
+                    "max": 14
+                },
+                {
+                    "hour": "07",
+                    "avg": 14,
+                    "median": 12,
+                    "min": 9,
+                    "max": 23
+                },
+                {
+                    "hour": "08",
+                    "avg": 18,
+                    "median": 19,
+                    "min": 8,
+                    "max": 25
+                },
+                {
+                    "hour": "09",
+                    "avg": 27,
+                    "median": 29,
+                    "min": 14,
+                    "max": 35
+                },
+                {
+                    "hour": "10",
+                    "avg": 38,
+                    "median": 42,
+                    "min": 16,
+                    "max": 51
+                },
+                {
+                    "hour": "11",
+                    "avg": 52,
+                    "median": 58,
+                    "min": 11,
+                    "max": 71
+                },
+                {
+                    "hour": "12",
+                    "avg": 51,
+                    "median": 52,
+                    "min": 6,
+                    "max": 83
+                },
+                {
+                    "hour": "13",
+                    "avg": 54,
+                    "median": 60,
+                    "min": 6,
+                    "max": 80
+                },
+                {
+                    "hour": "14",
+                    "avg": 59,
+                    "median": 56,
+                    "min": 19,
+                    "max": 94
+                },
+                {
+                    "hour": "15",
+                    "avg": 56,
+                    "median": 52,
+                    "min": 17,
+                    "max": 95
+                },
+                {
+                    "hour": "16",
+                    "avg": 59,
+                    "median": 52,
+                    "min": 28,
+                    "max": 107
+                },
+                {
+                    "hour": "17",
+                    "avg": 65,
+                    "median": 55,
+                    "min": 21,
+                    "max": 126
+                },
+                {
+                    "hour": "18",
+                    "avg": 64,
+                    "median": 65,
+                    "min": 19,
+                    "max": 105
+                },
+                {
+                    "hour": "19",
+                    "avg": 59,
+                    "median": 69,
+                    "min": 18,
+                    "max": 93
+                },
+                {
+                    "hour": "20",
+                    "avg": 47,
+                    "median": 43,
+                    "min": 23,
+                    "max": 89
+                },
+                {
+                    "hour": "21",
+                    "avg": 30,
+                    "median": 29,
+                    "min": 15,
+                    "max": 51
+                },
+                {
+                    "hour": "22",
+                    "avg": 20,
+                    "median": 19,
+                    "min": 10,
+                    "max": 33
+                },
+                {
+                    "hour": "23",
+                    "avg": 11,
+                    "median": 13,
+                    "min": 4,
+                    "max": 17
+                }
+            ],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 1296,
+                    "median": 1318
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 1228,
+                    "median": 1226
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 1434,
+                    "median": 1460
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 1263,
+                    "median": 1397
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 1068,
+                    "median": 1051
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 689,
+                    "median": 627
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 817,
+                    "median": 823
+                }
+            ],
+            "best_day": {
+                "date": "2017-07-18",
+                "weekday": "Wto",
+                "count": 1556
+            }
+        },
+        "wielopole": {
+            "id": "wielopole",
+            "name": "Wielopole",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "chrobrego": {
+            "id": "chrobrego",
+            "name": "Chrobrego",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "czarnowiejska": {
+            "id": "czarnowiejska",
+            "name": "Czarnowiejska",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "pl_wolnica": {
+            "id": "pl_wolnica",
+            "name": "Plac Wolnica",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "kamienna": {
+            "id": "kamienna",
+            "name": "kamienna",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        },
+        "date_utc_key": {
+            "id": "date_utc_key",
+            "name": "date_utc_key",
+            "total": 0,
+            "daily": [],
+            "hourly_weekday": [],
+            "hourly_weekend": [],
+            "weekday_stats": [
+                {
+                    "weekday": "Pon",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Wto",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Śro",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Czw",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Pią",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Sob",
+                    "avg": 0,
+                    "median": 0
+                },
+                {
+                    "weekday": "Nie",
+                    "avg": 0,
+                    "median": 0
+                }
+            ],
+            "best_day": null
+        }
+    }
+}
