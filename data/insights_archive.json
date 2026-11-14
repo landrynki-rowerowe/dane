@@ -1,0 +1,33 @@
+[
+  {
+    "id": "2026-03-dworzec-glowny",
+    "title": "Dworzec Główny znów liderem ruchu rowerowego",
+    "published_at": "2026-03-12",
+    "period_label": "",
+    "counter_id": "dworzec_gl",
+    "counter_name": "",
+    "tags": ["ruch rowerowy", "Kraków", "luty 2026"],
+    "paragraphs": [
+      "W lutym 2026, drugi miesiąc z rzędu, największy ruch rowerowy w Krakowie odnotowano na liczniku Dworzec Główny.",
+      "Z bezpiecznego, tunelowego przekroczenia torów kolejowych w dzień powszedni korzystano średnio 1153 razy i był to wynik o 3% lepszy od ubiegłorocznego, a aż o 60% wyższy od typowego ruchu w tym miejscu w lutym.",
+      "Na drugim miejscu uplasowała się ul. Grzegórzecka z wynikiem średnio 1071 przejazdów w dzień powszedni.",
+      "Dopiero na trzecim miejscu znalazła się ul. Mogilska, która od początku automatycznych pomiarów w Krakowie, czyli od listopada 2016, w ujęciu rocznym przenosi największy ruch rowerowy.",
+    "To potwierdza znaczenie tras zapewniających wygodne i bezkolizyjne połączenia."
+    ]
+  },
+  {
+    "id": "2026-02-dworzec-glowny",
+    "title": "Styczeń przyniósł spokojniejszy, ale stabilny ruch na głównych trasach",
+    "published_at": "2026-02-10",
+    "period_label": "",
+    "counter_id": "dworzec_gl",
+    "counter_name": "",
+    "tags": ["styczeń 2026", "Kraków", "ruch rowerowy", "zima", "porównania miesięczne"],
+    "paragraphs": [
+      "W styczniu ruch rowerowy był wyraźnie niższy niż w miesiącach cieplejszych, ale na części liczników utrzymał się na stabilnym, a nawet wyższym niż rok wcześniej poziomie.",
+      "Zmodernizowana infrastruktura wzdłuż al. 29 Listopada nieustannie zwiększa wykorzystanie tunelu rowerowego pod Dworcem Głównym, który okazał się być najczęściej używanym połączeniem, średnio 917 razy w dzień powszedni.",
+      "To wynik o 4% lepszy od zanotowanego w styczniu 2025 w tym miejscu.",
+      "Nowe odcinki dróg dla rowerów na Brożka i Nawojki, oddane pod koniec roku 2025, jak pokazują dane z liczników, dopiero zaczynają wypełniać się rowerzystami."
+    ]
+  }
+]
