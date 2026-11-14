@@ -249,7 +249,7 @@ function buildCounterDetails(string $id, string $name, array $m, int $minHours, 
   ];
 }
 // Pozycja overview z zagregowanych miesięcy ($aggs = lista emptyAgg()-podobnych tablic).
-function buildOverviewItem(string $id, string $name, array $aggs, int $expectedHours, float $threshold): array {
+function buildOverviewItem(string $id, string $name, array $aggs, int $expectedHours, float $threshold, string $sensorType = "eco_counter"): array {
   $t = emptyAgg();
   foreach ($aggs as $a) foreach ($t as $k => $_) $t[$k] += (int)($a[$k] ?? 0);
 
@@ -257,6 +257,7 @@ function buildOverviewItem(string $id, string $name, array $aggs, int $expectedH
   return [
     "id" => $id,
     "name" => $name,
+    "sensor_type" => $sensorType,   // "eco_counter" | "telraam" – statystyki sieci liczone tylko z Eco-Counter
     "month_sum" => $t["sum_all"],   // kompatybilność
     "period_sum" => $t["sum_all"],  // suma wszystkich zarejestrowanych godzin (bez wyłączonych serii zer)
     "avg_daily" => avgOf($t["vd_sum_all"], $t["vd_n_all"]),
@@ -553,7 +554,7 @@ try {
 
     $items = [];
     foreach ($counters as $id) {
-      $items[] = buildOverviewItem($id, $nameById[$id] ?? $id, [$agg[$ym][$id] ?? emptyAgg()], $expectedHours, $FULL_COVERAGE_THRESHOLD);
+      $items[] = buildOverviewItem($id, $nameById[$id] ?? $id, [$agg[$ym][$id] ?? emptyAgg()], $expectedHours, $FULL_COVERAGE_THRESHOLD, $isTelraam[$id] ? "telraam" : "eco_counter");
     }
     writeJsonPretty($permDir . "/overview_month_" . $ym . ".json", [
       "mode" => "month", "period" => $ym, "from" => $from, "to" => $to,
@@ -606,7 +607,7 @@ try {
   $monthVals = [];
   foreach ($counters as $id) {
     foreach ($availableMonths as $ym) {
-      $it = buildOverviewItem($id, "", [$agg[$ym][$id] ?? emptyAgg()], expectedHoursInMonth($ym), $FULL_COVERAGE_THRESHOLD);
+      $it = buildOverviewItem($id, "", [$agg[$ym][$id] ?? emptyAgg()], expectedHoursInMonth($ym), $FULL_COVERAGE_THRESHOLD, $isTelraam[$id] ? "telraam" : "eco_counter");
       if ($it["is_full"]) $monthVals[$id][$ym] = [$it["avg_daily"], $it["avg_weekday"], $it["avg_weekend"]];
     }
   }
@@ -650,7 +651,7 @@ try {
     foreach ($counters as $id) {
       $outCounters[$id] = buildCounterDetails($id, $nameById[$id] ?? $id, mergeCounterMonths($details, $ms, $id), $MIN_HOURS_VALID_DAY, $weekdayNamesPL);
       $aggs = array_map(fn($m) => $agg[$m][$id] ?? emptyAgg(), $ms);
-      $it = buildOverviewItem($id, $nameById[$id] ?? $id, $aggs, $expectedHours, $FULL_COVERAGE_THRESHOLD);
+      $it = buildOverviewItem($id, $nameById[$id] ?? $id, $aggs, $expectedHours, $FULL_COVERAGE_THRESHOLD, $isTelraam[$id] ? "telraam" : "eco_counter");
       $items[] = $it;
       if ($it["is_full"]) $quarterVals[$id][$yq] = [$it["avg_daily"], $it["avg_weekday"], $it["avg_weekend"]];
     }
@@ -708,7 +709,7 @@ try {
     foreach ($counters as $id) {
       $outCounters[$id] = buildCounterDetails($id, $nameById[$id] ?? $id, mergeCounterMonths($details, $ms, $id), $MIN_HOURS_VALID_DAY, $weekdayNamesPL);
       $aggs = array_map(fn($m) => $agg[$m][$id] ?? emptyAgg(), $ms);
-      $it = buildOverviewItem($id, $nameById[$id] ?? $id, $aggs, $expectedHours, $FULL_COVERAGE_THRESHOLD);
+      $it = buildOverviewItem($id, $nameById[$id] ?? $id, $aggs, $expectedHours, $FULL_COVERAGE_THRESHOLD, $isTelraam[$id] ? "telraam" : "eco_counter");
       $items[] = $it;
       if ($it["is_full"]) $yearVals[$id][(string)$y] = [$it["avg_daily"], $it["avg_weekday"], $it["avg_weekend"]];
     }
