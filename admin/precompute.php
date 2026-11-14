@@ -6,16 +6,28 @@ set_time_limit(0);
 
 $CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6Y2bE2n2rWeIwFoA-YPyVuFa9BOjEFdWfTIyph-1PcyeaaRacmM_4-Q_QdYo1dOrAldVSy4hi334J/pub?gid=1137251897&single=true&output=csv";
 
+// ===== METODOLOGIA (zatwierdzona przez Fundację) =====
+// Próg kompletności okresu: licznik jest pokazywany, gdy ma >= 95% oczekiwanych godzin.
 $FULL_COVERAGE_THRESHOLD = 0.95;
+// Dzień wchodzi do średnich (dzienna / powszednia / weekendowa), gdy ma >= 20 godzin z danymi.
+$MIN_HOURS_VALID_DAY = 20;
+// Seria >= 48 kolejnych godzin zer w liczniku całodobowym (Eco-Counter) to awaria, nie ruch:
+// godziny z serii są traktowane jako BRAK DANYCH. Telraam (zera w nocy są normalne) jest pomijany.
+$ZERO_RUN_MIN_HOURS = 48;
+
 $CSV_CACHE_TTL_SECONDS = 6 * 3600;
+// Liczniki optyczne, jeśli GeoJSON nie ma jeszcze pola properties.sensor_type.
+$FALLBACK_TELRAAM_IDS = ["chrobrego", "czarnowiejska", "pl_wolnica", "wielopole"];
 
 $root = realpath(__DIR__ . "/..");
 $cacheDir = $root . "/cache";
 $permDir  = $cacheDir . "/permanent";
 $csvCache = $cacheDir . "/data.csv";
 $geoPath  = $root . "/data/counters.geojson";
+$exclPath = $root . "/data/data_exclusions.json";
 
 $force = isset($_POST["force"]) && $_POST["force"] === "1";
+$DT_RE = '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/';
 
 function logln(string $s): void {
   echo htmlspecialchars($s) . "<br>\n";
@@ -35,11 +47,46 @@ function readJsonFile(string $path): array {
   if (!is_array($data)) throw new RuntimeException("Niepoprawny JSON: $path");
   return $data;
 }
+// Zapis atomowy: przeglądarka nigdy nie pobierze niedokończonego pliku.
+function writeAtomic(string $path, string $content): void {
+  $tmp = $path . ".tmp." . getmypid();
+  if (@file_put_contents($tmp, $content) === false) {
+    throw new RuntimeException("Nie mogę zapisać: $path");
+  }
+  if (!@rename($tmp, $path)) {
+    @unlink($tmp);
+    throw new RuntimeException("Nie mogę podmienić pliku: $path");
+  }
+}
 function writeJsonPretty(string $path, array $data): void {
   $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
   if ($json === false) throw new RuntimeException("json_encode failed for $path");
-  if (@file_put_contents($path, $json) === false) {
-    throw new RuntimeException("Nie mogę zapisać: $path");
+  writeAtomic($path, $json);
+}
+function countLines(string $path): int {
+  $n = 0;
+  $fh = @fopen($path, "r");
+  if (!$fh) return 0;
+  while (!feof($fh)) { $chunk = fread($fh, 1 << 20); if ($chunk === false) break; $n += substr_count($chunk, "\n"); }
+  fclose($fh);
+  return $n;
+}
+// Odrzuca pobrany plik, który nie jest CSV z danymi (np. strona błędu Google) lub jest wyraźnie krótszy od poprzedniego.
+function validateCsvText(string $csv, string $oldPath): void {
+  if (strlen($csv) < 1000) throw new RuntimeException("Pobrany plik jest zbyt krótki.");
+  $text = preg_replace('/^\xEF\xBB\xBF/', '', $csv);
+  $nl = strpos($text, "\n");
+  $first = $nl === false ? $text : substr($text, 0, $nl);
+  $header = array_map('trim', str_getcsv(trim($first)));
+  if (count($header) < 3 || !in_array("date", $header, true)) {
+    throw new RuntimeException("Pobrany plik nie wygląda jak CSV z danymi (brak kolumny date).");
+  }
+  if (is_file($oldPath)) {
+    $oldLines = countLines($oldPath);
+    $newLines = substr_count($csv, "\n");
+    if ($oldLines > 0 && $newLines < 0.95 * $oldLines) {
+      throw new RuntimeException("Nowy plik ma wyraźnie mniej wierszy ($newLines) niż poprzedni ($oldLines).");
+    }
   }
 }
 function medianInt(array $vals): ?int {
@@ -52,7 +99,7 @@ function medianInt(array $vals): ?int {
   return (int)round(($vals[$mid-1] + $vals[$mid]) / 2);
 }
 function daysInMonth(string $ym): int {
-  $dt = DateTime::createFromFormat("Y-m", $ym);
+  $dt = DateTime::createFromFormat("Y-m-d", $ym . "-01");
   if (!$dt) return 30;
   return (int)$dt->format("t");
 }
@@ -75,6 +122,11 @@ function dayCountsRange(string $fromYmd, string $toYmd): array {
   }
   return [$all,$wd,$we];
 }
+function dowOf(string $day): int {
+  static $cache = [];
+  if (!isset($cache[$day])) $cache[$day] = (int)date("N", strtotime($day . " 12:00:00"));
+  return $cache[$day];
+}
 function monthToQuarter(string $ym): string {
   $y = substr($ym,0,4);
   $m = (int)substr($ym,5,2);
@@ -91,6 +143,148 @@ function quarterMonths(string $yq): array {
     sprintf("%s-%02d", $y, $startM+1),
     sprintf("%s-%02d", $y, $startM+2),
   ];
+}
+function emptyAgg(): array {
+  return [
+    "sum_all" => 0, "sum_weekday" => 0, "sum_weekend" => 0, "hours_present" => 0, "hours_excluded" => 0,
+    "vd_sum_all" => 0, "vd_n_all" => 0, "vd_sum_wd" => 0, "vd_n_wd" => 0, "vd_sum_we" => 0, "vd_n_we" => 0,
+  ];
+}
+function avgOf(int $sum, int $n): int {
+  return $n > 0 ? (int)round($sum / $n) : 0;
+}
+// Szczegóły licznika z jednego lub kilku miesięcy.
+// $m: daily[dzień]=suma, hsum[dzień][godz]=suma, hdup[dzień][godz]=liczba wpisów (dla zdublowanej godz. 02:00), gaps[dzień]=true
+function mergeCounterMonths(array $details, array $months, string $id): array {
+  $out = ["daily" => [], "hsum" => [], "hdup" => [], "gaps" => []];
+  foreach ($months as $ym) {
+    $d = $details[$ym][$id] ?? null;
+    if (!$d) continue;
+    foreach ($d["daily"] as $day => $v) $out["daily"][$day] = $v;
+    foreach ($d["hsum"] as $day => $v) $out["hsum"][$day] = $v;
+    foreach ($d["hdup"] as $day => $v) $out["hdup"][$day] = $v;
+    foreach ($d["gaps"] as $day => $v) $out["gaps"][$day] = $v;
+  }
+  return $out;
+}
+function buildCounterDetails(string $id, string $name, array $m, int $minHours, array $weekdayNamesPL): array {
+  $days = array_unique(array_merge(array_keys($m["daily"]), array_keys($m["gaps"])));
+  sort($days);
+
+  if (!$days) {
+    return [
+      "id" => $id, "name" => $name, "total" => 0, "daily" => [],
+      "hourly_weekday" => [], "hourly_weekend" => [],
+      "weekday_stats" => array_map(fn($nm) => ["weekday"=>$nm,"avg"=>0,"median"=>0], $weekdayNamesPL),
+      "best_day" => null
+    ];
+  }
+
+  $dailyArr = [];
+  $total = 0;
+  $bestDay = null;
+  $valsByDow = [1=>[],2=>[],3=>[],4=>[],5=>[],6=>[],7=>[]];
+
+  foreach ($days as $day) {
+    if (isset($m["daily"][$day])) {
+      $cnt = (int)$m["daily"][$day];
+      $hrs = isset($m["hsum"][$day]) ? count($m["hsum"][$day]) : 0;
+      $dailyArr[] = ["date" => $day, "count" => $cnt, "hours" => $hrs];
+      $total += $cnt;
+      if ($hrs >= $minHours) {
+        $dow = dowOf($day);
+        $valsByDow[$dow][] = $cnt;
+        if ($bestDay === null || $cnt > $bestDay["count"]) {
+          $bestDay = ["date" => $day, "weekday" => $weekdayNamesPL[$dow - 1], "count" => $cnt];
+        }
+      }
+    } else {
+      // dzień w całości wyłączony (seria zer / ręczne wyłączenie): jawna przerwa, nie zero
+      $dailyArr[] = ["date" => $day, "count" => null, "hours" => 0];
+    }
+  }
+
+  $hourlyWeekday = [];
+  $hourlyWeekend = [];
+  for ($h = 0; $h < 24; $h++) {
+    $valsW = []; $valsE = [];
+    foreach ($m["hsum"] as $day => $hours) {
+      if (!isset($hours[$h])) continue;
+      $v = (int)$hours[$h];
+      $dup = (int)($m["hdup"][$day][$h] ?? 1);
+      if ($dup > 1) $v = (int)round($v / $dup); // zdublowana godz. 02:00 (zmiana czasu): średnia, nie suma
+      if (dowOf($day) >= 6) $valsE[] = $v; else $valsW[] = $v;
+    }
+    $hh = str_pad((string)$h, 2, "0", STR_PAD_LEFT);
+    $hourlyWeekday[] = [
+      "hour" => $hh,
+      "avg" => count($valsW) ? (int)round(array_sum($valsW) / count($valsW)) : 0,
+      "median" => medianInt($valsW) ?? 0,
+      "min" => count($valsW) ? min($valsW) : 0,
+      "max" => count($valsW) ? max($valsW) : 0
+    ];
+    $hourlyWeekend[] = [
+      "hour" => $hh,
+      "avg" => count($valsE) ? (int)round(array_sum($valsE) / count($valsE)) : 0,
+      "median" => medianInt($valsE) ?? 0,
+      "min" => count($valsE) ? min($valsE) : 0,
+      "max" => count($valsE) ? max($valsE) : 0
+    ];
+  }
+
+  $weekdayStats = [];
+  for ($i = 1; $i <= 7; $i++) {
+    $vals = $valsByDow[$i];
+    $weekdayStats[] = [
+      "weekday" => $weekdayNamesPL[$i - 1],
+      "avg" => count($vals) ? (int)round(array_sum($vals) / count($vals)) : 0,
+      "median" => medianInt($vals) ?? 0
+    ];
+  }
+
+  return [
+    "id" => $id, "name" => $name, "total" => $total, "daily" => $dailyArr,
+    "hourly_weekday" => $hourlyWeekday, "hourly_weekend" => $hourlyWeekend,
+    "weekday_stats" => $weekdayStats, "best_day" => $bestDay
+  ];
+}
+// Pozycja overview z zagregowanych miesięcy ($aggs = lista emptyAgg()-podobnych tablic).
+function buildOverviewItem(string $id, string $name, array $aggs, int $expectedHours, float $threshold): array {
+  $t = emptyAgg();
+  foreach ($aggs as $a) foreach ($t as $k => $_) $t[$k] += (int)($a[$k] ?? 0);
+
+  $coverage = $expectedHours > 0 ? min(1.0, $t["hours_present"] / $expectedHours) : 0.0;
+  return [
+    "id" => $id,
+    "name" => $name,
+    "month_sum" => $t["sum_all"],   // kompatybilność
+    "period_sum" => $t["sum_all"],  // suma wszystkich zarejestrowanych godzin (bez wyłączonych serii zer)
+    "avg_daily" => avgOf($t["vd_sum_all"], $t["vd_n_all"]),
+    "avg_weekday" => avgOf($t["vd_sum_wd"], $t["vd_n_wd"]),
+    "avg_weekend" => avgOf($t["vd_sum_we"], $t["vd_n_we"]),
+    "days_valid" => $t["vd_n_all"],
+    "coverage" => round($coverage, 4),
+    "is_full" => ($coverage >= $threshold),
+    "hours_present" => $t["hours_present"],
+    "hours_expected" => $expectedHours,
+    "hours_excluded" => $t["hours_excluded"]
+  ];
+}
+function loadExclusions(string $path): array {
+  if (!is_file($path)) return [];
+  $data = readJsonFile($path);
+  $list = $data["exclusions"] ?? [];
+  $out = [];
+  foreach ($list as $e) {
+    $id = (string)($e["counter"] ?? "");
+    $from = trim((string)($e["from"] ?? ""));
+    $to = trim((string)($e["to"] ?? ""));
+    if ($id === "" || $from === "" || $to === "") continue;
+    if (strlen($from) === 10) $from .= " 00:00";
+    if (strlen($to) === 10) $to .= " 23:59";
+    $out[] = ["counter" => $id, "from" => $from, "to" => $to, "reason" => (string)($e["reason"] ?? "")];
+  }
+  return $out;
 }
 
 ?>
@@ -114,14 +308,20 @@ try {
   ensureDir($cacheDir);
   ensureDir($permDir);
 
-  // GeoJSON id->name
+  // GeoJSON id -> name, typ czujnika
   if (!file_exists($geoPath)) throw new RuntimeException("Brak GeoJSON: $geoPath");
   $geo = readJsonFile($geoPath);
   $nameById = [];
+  $isTelraam = [];
   foreach (($geo["features"] ?? []) as $f) {
     $id = $f["properties"]["id"] ?? null;
     $nm = $f["properties"]["name"] ?? null;
-    if ($id) $nameById[$id] = $nm ?: $id;
+    if (!$id) continue;
+    $nameById[$id] = $nm ?: $id;
+    $st = $f["properties"]["sensor_type"] ?? null;
+    $isTelraam[$id] = $st !== null
+      ? (stripos((string)$st, "telraam") !== false)
+      : in_array($id, $FALLBACK_TELRAAM_IDS, true);
   }
   logln("GeoJSON OK: nazw: " . count($nameById));
 
@@ -137,110 +337,197 @@ try {
   if ($needDownload) {
     logln("Pobieram CSV…");
     $csv = @file_get_contents($CSV_URL);
-    if ($csv === false || strlen($csv) < 100) throw new RuntimeException("Nie udało się pobrać CSV.");
-    if (@file_put_contents($csvCache, $csv) === false) throw new RuntimeException("Nie mogę zapisać CSV cache.");
-    logln("CSV cache zapisany: " . number_format(strlen($csv)/1024/1024, 2) . " MB");
+    try {
+      if ($csv === false) throw new RuntimeException("Nie udało się pobrać CSV.");
+      validateCsvText($csv, $csvCache);
+      writeAtomic($csvCache, $csv);
+      logln("CSV cache zapisany: " . number_format(strlen($csv)/1024/1024, 2) . " MB");
+    } catch (RuntimeException $e) {
+      if (!file_exists($csvCache)) throw $e;
+      logln("UWAGA: " . $e->getMessage() . " Używam poprzedniego CSV z cache.");
+    }
+    unset($csv);
   } else {
     logln("Używam CSV z cache (TTL OK).");
   }
 
-  // Parse CSV -> monthly aggregates for all counters
+  // ===== Nagłówek i lista liczników (tylko te z GeoJSON; bez date_utc_key i kolumn bez opisu) =====
   $fh = fopen($csvCache, "r");
   if (!$fh) throw new RuntimeException("Nie mogę otworzyć CSV cache.");
   $header = fgetcsv($fh);
   if (!$header) throw new RuntimeException("CSV nie ma nagłówka.");
-  $header = array_map(fn($h) => trim((string)$h), $header);
+  $header = array_map(fn($h) => trim(preg_replace('/^\xEF\xBB\xBF/', '', (string)$h)), $header);
 
   $idxDate = array_search("date", $header, true);
   if ($idxDate === false) throw new RuntimeException("Brak kolumny date.");
 
   $counters = [];
   $counterIdx = [];
+  $skippedCols = [];
   for ($i=0; $i<count($header); $i++) {
     if ($i === $idxDate) continue;
     $id = $header[$i];
+    if ($id === "") continue;
+    if (!isset($nameById[$id])) { $skippedCols[] = $id; continue; }
     $counters[] = $id;
     $counterIdx[$id] = $i;
   }
-  logln("Liczników: " . count($counters));
+  logln("Liczników: " . count($counters) . ($skippedCols ? " (pominięte kolumny bez wpisu w GeoJSON: " . implode(", ", $skippedCols) . ")" : ""));
 
-  // agg[ym][id] = sums + hours_present
-  $agg = [];
-  $minMonth = null; $maxMonth = null;
-  $rows = 0;
-// ===== DETAILS (miesięczne) =====
-// details[ym][id]["daily"][YYYY-MM-DD] = suma dzienna
-// details[ym][id]["hour"][YYYY-MM-DD][H] = suma w danej godzinie danego dnia
-// details[ym][id]["hour_present"][YYYY-MM-DD][H] = true jeśli była dana (komórka niepusta)
-$details = [];
+  // ===== PRZEBIEG 1: serie zer (Eco-Counter) i ręczne wyłączenia =====
+  $manual = loadExclusions($exclPath);
+  $ranges = array_fill_keys($counters, []);   // id => [[startRow,endRow,fromDt,toDt,hours,source,reason], ...]
+  $runLen = array_fill_keys($counters, 0);
+  $runStartRow = []; $runStartDt = []; $runLastRow = []; $runLastDt = [];
+  $manualHit = [];
+  $rowNo = -1;
+  $invalidRows = 0;
+
+  $closeRun = function (string $id) use (&$runLen, &$runStartRow, &$runStartDt, &$runLastRow, &$runLastDt, &$ranges, $ZERO_RUN_MIN_HOURS) {
+    if ($runLen[$id] >= $ZERO_RUN_MIN_HOURS) {
+      $ranges[$id][] = [$runStartRow[$id], $runLastRow[$id], $runStartDt[$id], $runLastDt[$id], $runLen[$id], "auto", "seria zer >= {$ZERO_RUN_MIN_HOURS} h"];
+    }
+    $runLen[$id] = 0;
+  };
 
   while (($row = fgetcsv($fh)) !== false) {
-    $rows++;
-    $dtStr = trim((string)($row[$idxDate] ?? ""));
-    if ($dtStr === "") continue;
-    $ts = strtotime($dtStr);
-    if (!$ts) continue;
+    $rowNo++;
+    $dt = trim((string)($row[$idxDate] ?? ""));
+    if (!preg_match($DT_RE, $dt)) { if ($dt !== "") $invalidRows++; continue; }
 
-    $ym = date("Y-m", $ts);
+    foreach ($manual as $mi => $ex) {
+      if ($dt >= $ex["from"] && $dt <= $ex["to"]) {
+        if (!isset($manualHit[$mi])) $manualHit[$mi] = [$rowNo, $rowNo, $dt, $dt];
+        else { $manualHit[$mi][1] = $rowNo; $manualHit[$mi][3] = $dt; }
+      }
+    }
+
+    foreach ($counters as $id) {
+      if ($isTelraam[$id]) continue;
+      $vs = trim((string)($row[$counterIdx[$id]] ?? ""));
+      if ($vs !== "" && (int)preg_replace('/[^0-9]/', '', $vs) === 0) {
+        if ($runLen[$id] === 0) { $runStartRow[$id] = $rowNo; $runStartDt[$id] = $dt; }
+        $runLen[$id]++;
+        $runLastRow[$id] = $rowNo; $runLastDt[$id] = $dt;
+      } else {
+        $closeRun($id);
+      }
+    }
+  }
+  fclose($fh);
+  foreach ($counters as $id) if (!$isTelraam[$id]) $closeRun($id);
+
+  foreach ($manual as $mi => $ex) {
+    if (!isset($manualHit[$mi]) || !isset($ranges[$ex["counter"]])) continue;
+    [$s, $e, $fdt, $tdt] = $manualHit[$mi];
+    $ranges[$ex["counter"]][] = [$s, $e, $fdt, $tdt, $e - $s + 1, "manual", $ex["reason"]];
+  }
+
+  // lista do raportu + scalone zakresy wierszy do szybkiego sprawdzania w przebiegu 2
+  $qualityRanges = [];
+  $excl = [];
+  foreach ($counters as $id) {
+    $list = $ranges[$id];
+    usort($list, fn($a, $b) => $a[0] <=> $b[0]);
+    foreach ($list as $r) {
+      $qualityRanges[] = ["counter" => $id, "from" => $r[2], "to" => $r[3], "hours" => $r[4], "source" => $r[5], "reason" => $r[6]];
+    }
+    $merged = [];
+    foreach ($list as $r) {
+      if ($merged && $r[0] <= $merged[count($merged)-1][1] + 0) {
+        $merged[count($merged)-1][1] = max($merged[count($merged)-1][1], $r[1]);
+      } else {
+        $merged[] = [$r[0], $r[1]];
+      }
+    }
+    $excl[$id] = $merged;
+  }
+  logln("Wykryte serie zer / wyłączenia: " . count($qualityRanges));
+
+  // ===== PRZEBIEG 2: agregacja =====
+  $fh = fopen($csvCache, "r");
+  fgetcsv($fh);
+  $agg = [];
+  $details = [];   // details[ym][id] = ["daily"=>[], "hsum"=>[], "hdup"=>[], "gaps"=>[]]
+  $ptr = array_fill_keys($counters, 0);
+  $minMonth = null; $maxMonth = null;
+  $rows = 0;
+  $rowNo = -1;
+
+  while (($row = fgetcsv($fh)) !== false) {
+    $rowNo++;
+    $dt = trim((string)($row[$idxDate] ?? ""));
+    if (!preg_match($DT_RE, $dt)) continue;
+    $rows++;
+
+    $day = substr($dt, 0, 10);
+    $ym  = substr($dt, 0, 7);
+    $h   = (int)substr($dt, 11, 2);
+    $isWeekend = (dowOf($day) >= 6);
+
     if ($minMonth === null || $ym < $minMonth) $minMonth = $ym;
     if ($maxMonth === null || $ym > $maxMonth) $maxMonth = $ym;
-
-    $dow = (int)date("N", $ts);
-    $isWeekend = ($dow >= 6);
-
     if (!isset($agg[$ym])) $agg[$ym] = [];
 
     foreach ($counters as $id) {
-      $idx = $counterIdx[$id];
-      $valStr = trim((string)($row[$idx] ?? ""));
-      if ($valStr === "") continue; // brak danych
+      $valStr = trim((string)($row[$counterIdx[$id]] ?? ""));
+      if ($valStr === "") continue; // brak danych; "0" to obecna godzina z wartością zero
 
-      // "0" traktujemy jako obecność danych (godzina obecna)
+      // czy ten wiersz należy do serii zer / wyłączenia?
+      $rg = $excl[$id];
+      $p = $ptr[$id];
+      while ($p < count($rg) && $rg[$p][1] < $rowNo) $p++;
+      $ptr[$id] = $p;
+      $isExcluded = ($p < count($rg) && $rg[$p][0] <= $rowNo);
+
+      if (!isset($agg[$ym][$id])) $agg[$ym][$id] = emptyAgg();
+      if (!isset($details[$ym][$id])) $details[$ym][$id] = ["daily" => [], "hsum" => [], "hdup" => [], "gaps" => []];
+
+      if ($isExcluded) {
+        $agg[$ym][$id]["hours_excluded"]++;
+        $details[$ym][$id]["gaps"][$day] = true;
+        continue;
+      }
+
       $val = (int)preg_replace('/[^0-9]/', '', $valStr);
 
-      if (!isset($agg[$ym][$id])) {
-        $agg[$ym][$id] = [
-          "sum_all" => 0,
-          "sum_weekday" => 0,
-          "sum_weekend" => 0,
-          "hours_present" => 0
-        ];
+      $A = &$agg[$ym][$id];
+      $D = &$details[$ym][$id];
+
+      // godzina zdublowana przy zmianie czasu jesienią (dwa wiersze 02:00): liczymy jako jedną godzinę obecności
+      if (isset($D["hsum"][$day][$h])) {
+        $D["hsum"][$day][$h] += $val;
+        $D["hdup"][$day][$h] = ($D["hdup"][$day][$h] ?? 1) + 1;
+      } else {
+        $D["hsum"][$day][$h] = $val;
+        $A["hours_present"]++;
       }
+      $D["daily"][$day] = ($D["daily"][$day] ?? 0) + $val;
 
-      $agg[$ym][$id]["hours_present"] += 1;
-      if ($val > 0) {
-        $agg[$ym][$id]["sum_all"] += $val;
-        if ($isWeekend) $agg[$ym][$id]["sum_weekend"] += $val;
-        else $agg[$ym][$id]["sum_weekday"] += $val;
-      }
-    // ===== DETAILS: daily + hourly per dzień =====
-$day = date("Y-m-d", $ts);
-$h = (int)date("G", $ts);
-
-if (!isset($details[$ym])) $details[$ym] = [];
-if (!isset($details[$ym][$id])) {
-  $details[$ym][$id] = [
-    "daily" => [],
-    "hour" => [],
-    "hour_present" => []
-  ];
-}
-
-if (!isset($details[$ym][$id]["daily"][$day])) $details[$ym][$id]["daily"][$day] = 0;
-$details[$ym][$id]["daily"][$day] += $val;
-
-if (!isset($details[$ym][$id]["hour"][$day])) $details[$ym][$id]["hour"][$day] = [];
-if (!isset($details[$ym][$id]["hour"][$day][$h])) $details[$ym][$id]["hour"][$day][$h] = 0;
-$details[$ym][$id]["hour"][$day][$h] += $val;
-
-if (!isset($details[$ym][$id]["hour_present"][$day])) $details[$ym][$id]["hour_present"][$day] = [];
-$details[$ym][$id]["hour_present"][$day][$h] = true;
+      $A["sum_all"] += $val;
+      if ($isWeekend) $A["sum_weekend"] += $val; else $A["sum_weekday"] += $val;
+      unset($A, $D);
     }
   }
   fclose($fh);
 
-  logln("Wierszy: " . number_format($rows, 0, "", " "));
+  logln("Wierszy: " . number_format($rows, 0, "", " ") . ($invalidRows ? " (pominięto niepoprawnych: $invalidRows)" : ""));
   logln("Miesiące w danych: " . ($minMonth ?? "—") . " .. " . ($maxMonth ?? "—"));
+
+  // dni ważne do średnich (>= MIN_HOURS_VALID_DAY godzin z danymi)
+  foreach ($details as $ym => $byId) {
+    foreach ($byId as $id => $d) {
+      $A = &$agg[$ym][$id];
+      foreach ($d["daily"] as $day => $sum) {
+        $hrs = isset($d["hsum"][$day]) ? count($d["hsum"][$day]) : 0;
+        if ($hrs < $MIN_HOURS_VALID_DAY) continue;
+        $A["vd_sum_all"] += $sum; $A["vd_n_all"]++;
+        if (dowOf($day) >= 6) { $A["vd_sum_we"] += $sum; $A["vd_n_we"]++; }
+        else { $A["vd_sum_wd"] += $sum; $A["vd_n_wd"]++; }
+      }
+      unset($A);
+    }
+  }
 
   // last full month = previous calendar month
   $firstThisMonth = strtotime(date("Y-m-01 00:00:00"));
@@ -250,8 +537,10 @@ $details[$ym][$id]["hour_present"][$day][$h] = true;
   $months = array_keys($agg);
   sort($months);
 
-  // ===== MONTH OVERVIEW =====
-  $generatedOverviewM = 0;
+  $weekdayNamesPL = ["Pon","Wto","Śro","Czw","Pią","Sob","Nie"];
+
+  // ===== MONTH OVERVIEW + DETAILS =====
+  $generatedOverviewM = 0; $generatedDetailsM = 0;
   $availableMonths = [];
 
   foreach ($months as $ym) {
@@ -261,539 +550,135 @@ $details[$ym][$id]["hour_present"][$day][$h] = true;
     $expectedHours = expectedHoursInMonth($ym);
     $from = $ym . "-01";
     $to   = date("Y-m-t", strtotime($from));
-    [$daysAll, $daysWeekday, $daysWeekend] = dayCountsRange($from, $to);
 
     $items = [];
     foreach ($counters as $id) {
-      $m = $agg[$ym][$id] ?? ["sum_all"=>0,"sum_weekday"=>0,"sum_weekend"=>0,"hours_present"=>0];
-      $coverage = $expectedHours > 0 ? ($m["hours_present"] / $expectedHours) : 0.0;
-      $isFull = ($coverage >= $FULL_COVERAGE_THRESHOLD);
-
-      $avgDaily   = $daysAll > 0 ? (int)round($m["sum_all"] / $daysAll) : 0;
-      $avgWeekday = $daysWeekday > 0 ? (int)round($m["sum_weekday"] / $daysWeekday) : 0;
-      $avgWeekend = $daysWeekend > 0 ? (int)round($m["sum_weekend"] / $daysWeekend) : 0;
-
-      $items[] = [
-        "id" => $id,
-        "name" => $nameById[$id] ?? $id,
-
-        "month_sum" => (int)$m["sum_all"],   // kompatybilność
-        "period_sum" => (int)$m["sum_all"],  // uniwersalne
-
-        "avg_daily" => $avgDaily,
-        "avg_weekday" => $avgWeekday,
-        "avg_weekend" => $avgWeekend,
-        "coverage" => round($coverage, 4),
-        "is_full" => $isFull,
-        "hours_present"  => (int)($m["hours_present"] ?? 0),
-        "hours_expected" => (int)$expectedHours
-      ];
+      $items[] = buildOverviewItem($id, $nameById[$id] ?? $id, [$agg[$ym][$id] ?? emptyAgg()], $expectedHours, $FULL_COVERAGE_THRESHOLD);
     }
-
-    $out = [
-      "mode" => "month",
-      "period" => $ym,
-      "from" => $from,
-      "to" => $to,
-      "generated_at" => date("c"),
-      "threshold_full" => $FULL_COVERAGE_THRESHOLD,
-      "items" => $items
-    ];
-
-    writeJsonPretty($permDir . "/overview_month_" . $ym . ".json", $out);
-    $generatedOverviewM++;
-  }
-
-  logln("overview_month wygenerowane: " . $generatedOverviewM);
-
-    // ===== DETAILS MONTH: daily + hourly profiles + weekday stats + best day =====
-$generatedDetailsM = 0;
-
-$weekdayOrder = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-$weekdayNamesPL = ["Pon","Wto","Śro","Czw","Pią","Sob","Nie"];
-
-foreach ($availableMonths as $ym) {
-  // budujemy jeden plik na miesiąc (z wszystkimi licznikami)
-  $from = $ym . "-01";
-  $to   = date("Y-m-t", strtotime($from));
-
-  $outCounters = [];
-
-  foreach ($counters as $id) {
-    $d = $details[$ym][$id] ?? null;
-    if (!$d) {
-      // brak danych dla licznika w tym miesiącu
-      $outCounters[$id] = [
-        "id" => $id,
-        "name" => $nameById[$id] ?? $id,
-        "total" => 0,
-        "daily" => [],
-        "hourly_weekday" => [],
-        "hourly_weekend" => [],
-        "weekday_stats" => array_map(fn($nm) => ["weekday"=>$nm,"avg"=>0,"median"=>0], $weekdayNamesPL),
-        "best_day" => null
-      ];
-      continue;
-    }
-
-    // DAILY array
-    $dailyMap = $d["daily"] ?? [];
-    ksort($dailyMap);
-    $dailyArr = [];
-    $total = 0;
-
-    $bestDay = null;
-    foreach ($dailyMap as $day => $cnt) {
-      $cnt = (int)$cnt;
-      $dailyArr[] = ["date" => $day, "count" => $cnt];
-      $total += $cnt;
-
-      if ($bestDay === null || $cnt > $bestDay["count"]) {
-        $wd = $weekdayNamesPL[(int)date("N", strtotime($day)) - 1];
-        $bestDay = ["date" => $day, "weekday" => $wd, "count" => $cnt];
-      }
-    }
-
-    // HOURLY split: avg + median per hour (weekday vs weekend)
-    $hourMap = $d["hour"] ?? [];
-    $presentMap = $d["hour_present"] ?? [];
-
-    $hourlyWeekday = [];
-    $hourlyWeekend = [];
-
-    for ($h=0; $h<24; $h++) {
-      $valsW = [];
-      $valsE = [];
-
-      foreach ($hourMap as $day => $hours) {
-        // bierzemy tylko godziny, które faktycznie były obecne w CSV dla tego licznika
-        if (empty($presentMap[$day][$h])) continue;
-
-        $v = (int)($hours[$h] ?? 0);
-        $dow = (int)date("N", strtotime($day));
-        $isWeekend = ($dow >= 6);
-
-        if ($isWeekend) $valsE[] = $v;
-        else $valsW[] = $v;
-      }
-
-      $avgW = count($valsW) ? (int)round(array_sum($valsW) / count($valsW)) : 0;
-      $avgE = count($valsE) ? (int)round(array_sum($valsE) / count($valsE)) : 0;
-
-      $medW = medianInt($valsW); if ($medW === null) $medW = 0;
-      $medE = medianInt($valsE); if ($medE === null) $medE = 0;
-        
-        $minW = count($valsW) ? min($valsW) : 0;
-        $maxW = count($valsW) ? max($valsW) : 0;
-
-        $minE = count($valsE) ? min($valsE) : 0;
-        $maxE = count($valsE) ? max($valsE) : 0;
-
-      $hourlyWeekday[] = [
-  "hour" => str_pad((string)$h, 2, "0", STR_PAD_LEFT),
-  "avg" => $avgW,
-  "median" => $medW,
-  "min" => $minW,
-  "max" => $maxW
-];
-
-$hourlyWeekend[] = [
-  "hour" => str_pad((string)$h, 2, "0", STR_PAD_LEFT),
-  "avg" => $avgE,
-  "median" => $medE,
-  "min" => $minE,
-  "max" => $maxE
-];
-    }
-      
-
-    // WEEKDAY stats: avg + median z dziennych sum
-    $valsByWeekday = [ "Mon"=>[], "Tue"=>[], "Wed"=>[], "Thu"=>[], "Fri"=>[], "Sat"=>[], "Sun"=>[] ];
-    foreach ($dailyMap as $day => $cnt) {
-      $key = date("D", strtotime($day)); // Mon..Sun
-      if (isset($valsByWeekday[$key])) $valsByWeekday[$key][] = (int)$cnt;
-    }
-
-    $weekdayStats = [];
-    for ($i=0; $i<7; $i++) {
-      $key = $weekdayOrder[$i];
-      $vals = $valsByWeekday[$key] ?? [];
-      $avg = count($vals) ? (int)round(array_sum($vals) / count($vals)) : 0;
-      $med = medianInt($vals); if ($med === null) $med = 0;
-      $weekdayStats[] = ["weekday" => $weekdayNamesPL[$i], "avg" => $avg, "median" => $med];
-    }
-
-    $outCounters[$id] = [
-      "id" => $id,
-      "name" => $nameById[$id] ?? $id,
-      "total" => $total,
-      "daily" => $dailyArr,
-      "hourly_weekday" => $hourlyWeekday,
-      "hourly_weekend" => $hourlyWeekend,
-      "weekday_stats" => $weekdayStats,
-      "best_day" => $bestDay
-    ];
-  }
-
-  $out = [
-    "mode" => "month",
-    "period" => $ym,
-    "from" => $from,
-    "to" => $to,
-    "generated_at" => date("c"),
-    "counters" => $outCounters
-  ];
-
-  writeJsonPretty($permDir . "/details_month_" . $ym . ".json", $out);
-  $generatedDetailsM++;
-}
-
-logln("details_month wygenerowane: " . $generatedDetailsM);
-    
-
-
-  // ===== BASELINE MONTH (MM=01..12) =====
-  $generatedBaselineM = 0;
-  for ($mm=1; $mm<=12; $mm++) {
-    $mmStr = str_pad((string)$mm, 2, "0", STR_PAD_LEFT);
-    $items = [];
-
-    foreach ($counters as $id) {
-      $listDaily=[]; $listWeekday=[]; $listWeekend=[];
-
-      foreach ($availableMonths as $ym) {
-        if (substr($ym, 5, 2) !== $mmStr) continue;
-
-        $expectedHours = expectedHoursInMonth($ym);
-        $from = $ym . "-01";
-        $to   = date("Y-m-t", strtotime($from));
-        [$daysAll, $daysWeekday, $daysWeekend] = dayCountsRange($from, $to);
-
-        $m = $agg[$ym][$id] ?? null;
-        if (!$m) continue;
-        $coverage = $expectedHours > 0 ? ($m["hours_present"] / $expectedHours) : 0.0;
-        if ($coverage < $FULL_COVERAGE_THRESHOLD) continue;
-
-        $listDaily[]   = $daysAll > 0 ? (int)round($m["sum_all"] / $daysAll) : 0;
-        $listWeekday[] = $daysWeekday > 0 ? (int)round($m["sum_weekday"] / $daysWeekday) : 0;
-        $listWeekend[] = $daysWeekend > 0 ? (int)round($m["sum_weekend"] / $daysWeekend) : 0;
-      }
-
-      $items[] = [
-        "id" => $id,
-        "name" => $nameById[$id] ?? $id,
-        "median_daily" => medianInt($listDaily),
-        "median_weekday" => medianInt($listWeekday),
-        "median_weekend" => medianInt($listWeekend),
-        "n_periods" => count($listDaily)
-      ];
-    }
-
-    writeJsonPretty($permDir . "/baseline_median_month_" . $mmStr . ".json", [
-      "mode" => "month",
-      "key" => $mmStr,
-      "generated_at" => date("c"),
-      "threshold_full" => $FULL_COVERAGE_THRESHOLD,
-      "items" => $items
+    writeJsonPretty($permDir . "/overview_month_" . $ym . ".json", [
+      "mode" => "month", "period" => $ym, "from" => $from, "to" => $to,
+      "generated_at" => date("c"), "threshold_full" => $FULL_COVERAGE_THRESHOLD,
+      "min_hours_valid_day" => $MIN_HOURS_VALID_DAY, "items" => $items
     ]);
+    $generatedOverviewM++;
+
+    $outCounters = [];
+    foreach ($counters as $id) {
+      $outCounters[$id] = buildCounterDetails($id, $nameById[$id] ?? $id, mergeCounterMonths($details, [$ym], $id), $MIN_HOURS_VALID_DAY, $weekdayNamesPL);
+    }
+    writeJsonPretty($permDir . "/details_month_" . $ym . ".json", [
+      "mode" => "month", "period" => $ym, "from" => $from, "to" => $to,
+      "generated_at" => date("c"), "counters" => $outCounters
+    ]);
+    $generatedDetailsM++;
+  }
+  logln("overview_month wygenerowane: " . $generatedOverviewM);
+  logln("details_month wygenerowane: " . $generatedDetailsM);
+
+  // ===== BASELINE: wartości per okres (JS liczy medianę bez okresu, który właśnie oglądasz) =====
+  // $periodValues[$id][$periodKey] = [daily, weekday, weekend] dla okresów spełniających próg kompletności
+  $baselineFile = function (string $path, string $mode, string $key, array $periodValuesById, array $periodsForKey) use ($counters, $nameById, $FULL_COVERAGE_THRESHOLD): void {
+    $items = [];
+    foreach ($counters as $id) {
+      $listD = []; $listW = []; $listE = []; $by = [];
+      foreach ($periodsForKey as $pk) {
+        $v = $periodValuesById[$id][$pk] ?? null;
+        if (!$v) continue;
+        $listD[] = $v[0]; $listW[] = $v[1]; $listE[] = $v[2];
+        $by[$pk] = ["daily" => $v[0], "weekday" => $v[1], "weekend" => $v[2]];
+      }
+      $items[] = [
+        "id" => $id,
+        "name" => $nameById[$id] ?? $id,
+        "median_daily" => medianInt($listD),
+        "median_weekday" => medianInt($listW),
+        "median_weekend" => medianInt($listE),
+        "n_periods" => count($listD),
+        "by_period" => $by
+      ];
+    }
+    writeJsonPretty($path, [
+      "mode" => $mode, "key" => $key, "generated_at" => date("c"),
+      "threshold_full" => $FULL_COVERAGE_THRESHOLD, "items" => $items
+    ]);
+  };
+
+  $monthVals = [];
+  foreach ($counters as $id) {
+    foreach ($availableMonths as $ym) {
+      $it = buildOverviewItem($id, "", [$agg[$ym][$id] ?? emptyAgg()], expectedHoursInMonth($ym), $FULL_COVERAGE_THRESHOLD);
+      if ($it["is_full"]) $monthVals[$id][$ym] = [$it["avg_daily"], $it["avg_weekday"], $it["avg_weekend"]];
+    }
+  }
+  $generatedBaselineM = 0;
+  for ($mm = 1; $mm <= 12; $mm++) {
+    $mmStr = str_pad((string)$mm, 2, "0", STR_PAD_LEFT);
+    $periods = array_values(array_filter($availableMonths, fn($ym) => substr($ym, 5, 2) === $mmStr));
+    $baselineFile($permDir . "/baseline_median_month_" . $mmStr . ".json", "month", $mmStr, $monthVals, $periods);
     $generatedBaselineM++;
   }
   logln("baseline_median_month wygenerowane: " . $generatedBaselineM);
 
-  // ===== QUARTERS: list available quarters <= lastFullMonth (full 3 months) =====
+  // ===== QUARTERS =====
   $quartersSet = [];
-  foreach ($availableMonths as $ym) {
-    $quartersSet[monthToQuarter($ym)] = true;
-  }
+  foreach ($availableMonths as $ym) $quartersSet[monthToQuarter($ym)] = true;
   $quarters = array_keys($quartersSet);
   sort($quarters);
 
   $availableQuarters = [];
   foreach ($quarters as $yq) {
     $ms = quarterMonths($yq);
-    // quarter is available only if all 3 months exist in availableMonths
     if (in_array($ms[0], $availableMonths, true) &&
         in_array($ms[1], $availableMonths, true) &&
         in_array($ms[2], $availableMonths, true)) {
       $availableQuarters[] = $yq;
     }
   }
-
   $lastFullQuarter = count($availableQuarters) ? end($availableQuarters) : null;
   if ($lastFullQuarter) logln("Ostatni pełny kwartał: " . $lastFullQuarter);
-    
-// ===== DETAILS QUARTER: daily + hourly profiles + weekday stats + best day =====
-$generatedDetailsQ = 0;
 
-foreach ($availableQuarters as $yq) {
-  $ms = quarterMonths($yq);
-  $from = $ms[0] . "-01";
-  $to   = date("Y-m-t", strtotime($ms[2] . "-01"));
-
-  $outCounters = [];
-
-  foreach ($counters as $id) {
-    // Zbierz dane z 3 miesięcy do jednego "quarter details"
-    $dailyMap = [];
-    $hourMap = [];
-    $presentMap = [];
-
-    foreach ($ms as $ym) {
-      $d = $details[$ym][$id] ?? null;
-      if (!$d) continue;
-
-      foreach (($d["daily"] ?? []) as $day => $cnt) {
-        if (!isset($dailyMap[$day])) $dailyMap[$day] = 0;
-        $dailyMap[$day] += (int)$cnt;
-      }
-      foreach (($d["hour"] ?? []) as $day => $hours) {
-        if (!isset($hourMap[$day])) $hourMap[$day] = [];
-        foreach ($hours as $h => $cnt) {
-          $h = (int)$h;
-          if (!isset($hourMap[$day][$h])) $hourMap[$day][$h] = 0;
-          $hourMap[$day][$h] += (int)$cnt;
-        }
-      }
-      foreach (($d["hour_present"] ?? []) as $day => $hoursPresent) {
-        if (!isset($presentMap[$day])) $presentMap[$day] = [];
-        foreach ($hoursPresent as $h => $_true) {
-          $presentMap[$day][(int)$h] = true;
-        }
-      }
-    }
-
-    if (!$dailyMap) {
-      $outCounters[$id] = [
-        "id" => $id,
-        "name" => $nameById[$id] ?? $id,
-        "total" => 0,
-        "daily" => [],
-        "hourly_weekday" => [],
-        "hourly_weekend" => [],
-        "weekday_stats" => array_map(fn($nm) => ["weekday"=>$nm,"avg"=>0,"median"=>0], $weekdayNamesPL),
-        "best_day" => null
-      ];
-      continue;
-    }
-
-    ksort($dailyMap);
-    $dailyArr = [];
-    $total = 0;
-    $bestDay = null;
-
-    foreach ($dailyMap as $day => $cnt) {
-      $cnt = (int)$cnt;
-      $dailyArr[] = ["date" => $day, "count" => $cnt];
-      $total += $cnt;
-
-      if ($bestDay === null || $cnt > $bestDay["count"]) {
-        $wd = $weekdayNamesPL[(int)date("N", strtotime($day)) - 1];
-        $bestDay = ["date" => $day, "weekday" => $wd, "count" => $cnt];
-      }
-    }
-
-    // hourly weekday/weekend (avg + median) na bazie dni
-    $hourlyWeekday = [];
-    $hourlyWeekend = [];
-    for ($h=0; $h<24; $h++) {
-      $valsW = [];
-      $valsE = [];
-
-      foreach ($hourMap as $day => $hours) {
-        if (empty($presentMap[$day][$h])) continue;
-
-        $v = (int)($hours[$h] ?? 0);
-        $dow = (int)date("N", strtotime($day));
-        $isWeekend = ($dow >= 6);
-
-        if ($isWeekend) $valsE[] = $v;
-        else $valsW[] = $v;
-      }
-
-      $avgW = count($valsW) ? (int)round(array_sum($valsW) / count($valsW)) : 0;
-      $avgE = count($valsE) ? (int)round(array_sum($valsE) / count($valsE)) : 0;
-
-      $medW = medianInt($valsW); if ($medW === null) $medW = 0;
-      $medE = medianInt($valsE); if ($medE === null) $medE = 0;
-    $minW = count($valsW) ? min($valsW) : 0;
-$maxW = count($valsW) ? max($valsW) : 0;
-
-$minE = count($valsE) ? min($valsE) : 0;
-$maxE = count($valsE) ? max($valsE) : 0;
-
-      $hourlyWeekday[] = [
-  "hour" => str_pad((string)$h, 2, "0", STR_PAD_LEFT),
-  "avg" => $avgW,
-  "median" => $medW,
-  "min" => $minW,
-  "max" => $maxW
-];
-
-$hourlyWeekend[] = [
-  "hour" => str_pad((string)$h, 2, "0", STR_PAD_LEFT),
-  "avg" => $avgE,
-  "median" => $medE,
-  "min" => $minE,
-  "max" => $maxE
-];
-    }
-
-    // weekday stats (avg + median) z dziennych sum
-    $valsByWeekday = [ "Mon"=>[], "Tue"=>[], "Wed"=>[], "Thu"=>[], "Fri"=>[], "Sat"=>[], "Sun"=>[] ];
-    foreach ($dailyMap as $day => $cnt) {
-      $key = date("D", strtotime($day));
-      if (isset($valsByWeekday[$key])) $valsByWeekday[$key][] = (int)$cnt;
-    }
-
-    $weekdayStats = [];
-    for ($i=0; $i<7; $i++) {
-      $key = $weekdayOrder[$i];
-      $vals = $valsByWeekday[$key] ?? [];
-      $avg = count($vals) ? (int)round(array_sum($vals) / count($vals)) : 0;
-      $med = medianInt($vals); if ($med === null) $med = 0;
-      $weekdayStats[] = ["weekday" => $weekdayNamesPL[$i], "avg" => $avg, "median" => $med];
-    }
-
-    $outCounters[$id] = [
-      "id" => $id,
-      "name" => $nameById[$id] ?? $id,
-      "total" => $total,
-      "daily" => $dailyArr,
-      "hourly_weekday" => $hourlyWeekday,
-      "hourly_weekend" => $hourlyWeekend,
-      "weekday_stats" => $weekdayStats,
-      "best_day" => $bestDay
-    ];
-  }
-
-  writeJsonPretty($permDir . "/details_quarter_" . $yq . ".json", [
-    "mode" => "quarter",
-    "period" => $yq,
-    "from" => $from,
-    "to" => $to,
-    "generated_at" => date("c"),
-    "counters" => $outCounters
-  ]);
-
-  $generatedDetailsQ++;
-}
-logln("details_quarter wygenerowane: " . $generatedDetailsQ);
-
-  // ===== QUARTER OVERVIEW ===== 
-  $generatedOverviewQ = 0;
+  $quarterVals = [];
+  $generatedDetailsQ = 0; $generatedOverviewQ = 0;
   foreach ($availableQuarters as $yq) {
     $ms = quarterMonths($yq);
     $from = $ms[0] . "-01";
     $to   = date("Y-m-t", strtotime($ms[2] . "-01"));
-    [$daysAll, $daysWeekday, $daysWeekend] = dayCountsRange($from, $to);
-
     $expectedHours = expectedHoursInMonth($ms[0]) + expectedHoursInMonth($ms[1]) + expectedHoursInMonth($ms[2]);
 
+    $outCounters = [];
     $items = [];
     foreach ($counters as $id) {
-      $sumAll=0; $sumWd=0; $sumWe=0; $hours=0;
-
-      foreach ($ms as $m) {
-        $a = $agg[$m][$id] ?? null;
-        if (!$a) continue;
-        $sumAll += (int)$a["sum_all"];
-        $sumWd  += (int)$a["sum_weekday"];
-        $sumWe  += (int)$a["sum_weekend"];
-        $hours  += (int)$a["hours_present"];
-      }
-
-      $coverage = $expectedHours > 0 ? ($hours / $expectedHours) : 0.0;
-      $isFull = ($coverage >= $FULL_COVERAGE_THRESHOLD);
-
-      $avgDaily   = $daysAll > 0 ? (int)round($sumAll / $daysAll) : 0;
-      $avgWeekday = $daysWeekday > 0 ? (int)round($sumWd / $daysWeekday) : 0;
-      $avgWeekend = $daysWeekend > 0 ? (int)round($sumWe / $daysWeekend) : 0;
-
-      $items[] = [
-        "id" => $id,
-        "name" => $nameById[$id] ?? $id,
-        "period_sum" => $sumAll,
-        "avg_daily" => $avgDaily,
-        "avg_weekday" => $avgWeekday,
-        "avg_weekend" => $avgWeekend,
-        "coverage" => round($coverage, 4),
-        "is_full" => $isFull,
-        "hours_present" => (int)$hours,
-        "hours_expected" => (int)$expectedHours
-      ];
+      $outCounters[$id] = buildCounterDetails($id, $nameById[$id] ?? $id, mergeCounterMonths($details, $ms, $id), $MIN_HOURS_VALID_DAY, $weekdayNamesPL);
+      $aggs = array_map(fn($m) => $agg[$m][$id] ?? emptyAgg(), $ms);
+      $it = buildOverviewItem($id, $nameById[$id] ?? $id, $aggs, $expectedHours, $FULL_COVERAGE_THRESHOLD);
+      $items[] = $it;
+      if ($it["is_full"]) $quarterVals[$id][$yq] = [$it["avg_daily"], $it["avg_weekday"], $it["avg_weekend"]];
     }
-
+    writeJsonPretty($permDir . "/details_quarter_" . $yq . ".json", [
+      "mode" => "quarter", "period" => $yq, "from" => $from, "to" => $to,
+      "generated_at" => date("c"), "counters" => $outCounters
+    ]);
+    $generatedDetailsQ++;
     writeJsonPretty($permDir . "/overview_quarter_" . $yq . ".json", [
-      "mode" => "quarter",
-      "period" => $yq,
-      "from" => $from,
-      "to" => $to,
-      "generated_at" => date("c"),
-      "threshold_full" => $FULL_COVERAGE_THRESHOLD,
-      "items" => $items
+      "mode" => "quarter", "period" => $yq, "from" => $from, "to" => $to,
+      "generated_at" => date("c"), "threshold_full" => $FULL_COVERAGE_THRESHOLD,
+      "min_hours_valid_day" => $MIN_HOURS_VALID_DAY, "items" => $items
     ]);
     $generatedOverviewQ++;
   }
+  logln("details_quarter wygenerowane: " . $generatedDetailsQ);
   logln("overview_quarter wygenerowane: " . $generatedOverviewQ);
 
-  // ===== BASELINE QUARTER (Q1..Q4) =====
   $generatedBaselineQ = 0;
-  for ($q=1; $q<=4; $q++) {
+  for ($q = 1; $q <= 4; $q++) {
     $qKey = "Q" . $q;
-    $items = [];
-
-    foreach ($counters as $id) {
-      $listDaily=[]; $listWeekday=[]; $listWeekend=[];
-
-      foreach ($availableQuarters as $yq) {
-        if (substr($yq, 5, 2) !== $qKey) continue;
-
-        $ms = quarterMonths($yq);
-        $from = $ms[0] . "-01";
-        $to   = date("Y-m-t", strtotime($ms[2] . "-01"));
-        [$daysAll, $daysWeekday, $daysWeekend] = dayCountsRange($from, $to);
-        $expectedHours = expectedHoursInMonth($ms[0]) + expectedHoursInMonth($ms[1]) + expectedHoursInMonth($ms[2]);
-
-        $sumAll=0; $sumWd=0; $sumWe=0; $hours=0;
-        foreach ($ms as $m) {
-          $a = $agg[$m][$id] ?? null;
-          if (!$a) continue;
-          $sumAll += (int)$a["sum_all"];
-          $sumWd  += (int)$a["sum_weekday"];
-          $sumWe  += (int)$a["sum_weekend"];
-          $hours  += (int)$a["hours_present"];
-        }
-
-        $coverage = $expectedHours > 0 ? ($hours / $expectedHours) : 0.0;
-        if ($coverage < $FULL_COVERAGE_THRESHOLD) continue;
-
-        $listDaily[]   = $daysAll > 0 ? (int)round($sumAll / $daysAll) : 0;
-        $listWeekday[] = $daysWeekday > 0 ? (int)round($sumWd / $daysWeekday) : 0;
-        $listWeekend[] = $daysWeekend > 0 ? (int)round($sumWe / $daysWeekend) : 0;
-      }
-
-      $items[] = [
-        "id" => $id,
-        "name" => $nameById[$id] ?? $id,
-        "median_daily" => medianInt($listDaily),
-        "median_weekday" => medianInt($listWeekday),
-        "median_weekend" => medianInt($listWeekend),
-        "n_periods" => count($listDaily)
-      ];
-    }
-
-    writeJsonPretty($permDir . "/baseline_median_quarter_" . $qKey . ".json", [
-      "mode" => "quarter",
-      "key" => $qKey,
-      "generated_at" => date("c"),
-      "threshold_full" => $FULL_COVERAGE_THRESHOLD,
-      "items" => $items
-    ]);
+    $periods = array_values(array_filter($availableQuarters, fn($yq) => substr($yq, 5, 2) === $qKey));
+    $baselineFile($permDir . "/baseline_median_quarter_" . $qKey . ".json", "quarter", $qKey, $quarterVals, $periods);
     $generatedBaselineQ++;
   }
   logln("baseline_median_quarter wygenerowane: " . $generatedBaselineQ);
 
-  // ===== YEARS available (full years: Jan..Dec all months exist) =====
+  // ===== YEARS (pełne lata: wszystkie 12 miesięcy istnieją) =====
   $yearsSet = [];
   foreach ($availableMonths as $ym) $yearsSet[substr($ym,0,4)] = true;
   $years = array_keys($yearsSet); sort($years);
@@ -801,280 +686,67 @@ logln("details_quarter wygenerowane: " . $generatedDetailsQ);
   $availableYears = [];
   foreach ($years as $y) {
     $ok = true;
-    for ($m=1; $m<=12; $m++) {
-      $ym = sprintf("%s-%02d", $y, $m);
-      if (!in_array($ym, $availableMonths, true)) { $ok=false; break; }
+    for ($m = 1; $m <= 12; $m++) {
+      if (!in_array(sprintf("%s-%02d", $y, $m), $availableMonths, true)) { $ok = false; break; }
     }
     if ($ok) $availableYears[] = $y;
   }
   $lastFullYear = count($availableYears) ? end($availableYears) : null;
   if ($lastFullYear) logln("Ostatni pełny rok: " . $lastFullYear);
-    
-// ===== DETAILS YEAR: daily + hourly profiles + weekday stats + best day =====
-$generatedDetailsY = 0;
 
-foreach ($availableYears as $y) {
-  $from = $y . "-01-01";
-  $to   = $y . "-12-31";
-
-  $outCounters = [];
-
-  foreach ($counters as $id) {
-    $dailyMap = [];
-    $hourMap = [];
-    $presentMap = [];
-
-    for ($m=1; $m<=12; $m++) {
-      $ym = sprintf("%s-%02d", $y, $m);
-      $d = $details[$ym][$id] ?? null;
-      if (!$d) continue;
-
-      foreach (($d["daily"] ?? []) as $day => $cnt) {
-        if (!isset($dailyMap[$day])) $dailyMap[$day] = 0;
-        $dailyMap[$day] += (int)$cnt;
-      }
-      foreach (($d["hour"] ?? []) as $day => $hours) {
-        if (!isset($hourMap[$day])) $hourMap[$day] = [];
-        foreach ($hours as $h => $cnt) {
-          $h = (int)$h;
-          if (!isset($hourMap[$day][$h])) $hourMap[$day][$h] = 0;
-          $hourMap[$day][$h] += (int)$cnt;
-        }
-      }
-      foreach (($d["hour_present"] ?? []) as $day => $hoursPresent) {
-        if (!isset($presentMap[$day])) $presentMap[$day] = [];
-        foreach ($hoursPresent as $h => $_true) {
-          $presentMap[$day][(int)$h] = true;
-        }
-      }
-    }
-
-    if (!$dailyMap) {
-      $outCounters[$id] = [
-        "id" => $id,
-        "name" => $nameById[$id] ?? $id,
-        "total" => 0,
-        "daily" => [],
-        "hourly_weekday" => [],
-        "hourly_weekend" => [],
-        "weekday_stats" => array_map(fn($nm) => ["weekday"=>$nm,"avg"=>0,"median"=>0], $weekdayNamesPL),
-        "best_day" => null
-      ];
-      continue;
-    }
-
-    ksort($dailyMap);
-    $dailyArr = [];
-    $total = 0;
-    $bestDay = null;
-
-    foreach ($dailyMap as $day => $cnt) {
-      $cnt = (int)$cnt;
-      $dailyArr[] = ["date" => $day, "count" => $cnt];
-      $total += $cnt;
-
-      if ($bestDay === null || $cnt > $bestDay["count"]) {
-        $wd = $weekdayNamesPL[(int)date("N", strtotime($day)) - 1];
-        $bestDay = ["date" => $day, "weekday" => $wd, "count" => $cnt];
-      }
-    }
-
-    $hourlyWeekday = [];
-    $hourlyWeekend = [];
-    for ($h=0; $h<24; $h++) {
-      $valsW = [];
-      $valsE = [];
-
-      foreach ($hourMap as $day => $hours) {
-        if (empty($presentMap[$day][$h])) continue;
-
-        $v = (int)($hours[$h] ?? 0);
-        $dow = (int)date("N", strtotime($day));
-        $isWeekend = ($dow >= 6);
-
-        if ($isWeekend) $valsE[] = $v;
-        else $valsW[] = $v;
-      }
-
-      $avgW = count($valsW) ? (int)round(array_sum($valsW) / count($valsW)) : 0;
-      $avgE = count($valsE) ? (int)round(array_sum($valsE) / count($valsE)) : 0;
-
-      $medW = medianInt($valsW); if ($medW === null) $medW = 0;
-      $medE = medianInt($valsE); if ($medE === null) $medE = 0;
-    $minW = count($valsW) ? min($valsW) : 0;
-$maxW = count($valsW) ? max($valsW) : 0;
-
-$minE = count($valsE) ? min($valsE) : 0;
-$maxE = count($valsE) ? max($valsE) : 0;
-
-      $hourlyWeekday[] = [
-  "hour" => str_pad((string)$h, 2, "0", STR_PAD_LEFT),
-  "avg" => $avgW,
-  "median" => $medW,
-  "min" => $minW,
-  "max" => $maxW
-];
-
-$hourlyWeekend[] = [
-  "hour" => str_pad((string)$h, 2, "0", STR_PAD_LEFT),
-  "avg" => $avgE,
-  "median" => $medE,
-  "min" => $minE,
-  "max" => $maxE
-];
-    }
-
-    $valsByWeekday = [ "Mon"=>[], "Tue"=>[], "Wed"=>[], "Thu"=>[], "Fri"=>[], "Sat"=>[], "Sun"=>[] ];
-    foreach ($dailyMap as $day => $cnt) {
-      $key = date("D", strtotime($day));
-      if (isset($valsByWeekday[$key])) $valsByWeekday[$key][] = (int)$cnt;
-    }
-
-    $weekdayStats = [];
-    for ($i=0; $i<7; $i++) {
-      $key = $weekdayOrder[$i];
-      $vals = $valsByWeekday[$key] ?? [];
-      $avg = count($vals) ? (int)round(array_sum($vals) / count($vals)) : 0;
-      $med = medianInt($vals); if ($med === null) $med = 0;
-      $weekdayStats[] = ["weekday" => $weekdayNamesPL[$i], "avg" => $avg, "median" => $med];
-    }
-
-    $outCounters[$id] = [
-      "id" => $id,
-      "name" => $nameById[$id] ?? $id,
-      "total" => $total,
-      "daily" => $dailyArr,
-      "hourly_weekday" => $hourlyWeekday,
-      "hourly_weekend" => $hourlyWeekend,
-      "weekday_stats" => $weekdayStats,
-      "best_day" => $bestDay
-    ];
-  }
-
-  writeJsonPretty($permDir . "/details_year_" . $y . ".json", [
-    "mode" => "year",
-    "period" => $y,
-    "from" => $from,
-    "to" => $to,
-    "generated_at" => date("c"),
-    "counters" => $outCounters
-  ]);
-
-  $generatedDetailsY++;
-}
-logln("details_year wygenerowane: " . $generatedDetailsY);
-
-  // ===== YEAR OVERVIEW =====
-  $generatedOverviewY = 0;
+  $yearVals = [];
+  $generatedDetailsY = 0; $generatedOverviewY = 0;
   foreach ($availableYears as $y) {
     $from = $y . "-01-01";
     $to   = $y . "-12-31";
-    [$daysAll, $daysWeekday, $daysWeekend] = dayCountsRange($from, $to);
-
+    $ms = [];
     $expectedHours = 0;
-    for ($m=1; $m<=12; $m++) $expectedHours += expectedHoursInMonth(sprintf("%s-%02d",$y,$m));
+    for ($m = 1; $m <= 12; $m++) { $ym = sprintf("%s-%02d", $y, $m); $ms[] = $ym; $expectedHours += expectedHoursInMonth($ym); }
 
+    $outCounters = [];
     $items = [];
     foreach ($counters as $id) {
-      $sumAll=0; $sumWd=0; $sumWe=0; $hours=0;
-
-      for ($m=1; $m<=12; $m++) {
-        $ym = sprintf("%s-%02d", $y, $m);
-        $a = $agg[$ym][$id] ?? null;
-        if (!$a) continue;
-        $sumAll += (int)$a["sum_all"];
-        $sumWd  += (int)$a["sum_weekday"];
-        $sumWe  += (int)$a["sum_weekend"];
-        $hours  += (int)$a["hours_present"];
-      }
-
-      $coverage = $expectedHours > 0 ? ($hours / $expectedHours) : 0.0;
-      $isFull = ($coverage >= $FULL_COVERAGE_THRESHOLD);
-
-      $avgDaily   = $daysAll > 0 ? (int)round($sumAll / $daysAll) : 0;
-      $avgWeekday = $daysWeekday > 0 ? (int)round($sumWd / $daysWeekday) : 0;
-      $avgWeekend = $daysWeekend > 0 ? (int)round($sumWe / $daysWeekend) : 0;
-
-      $items[] = [
-        "id" => $id,
-        "name" => $nameById[$id] ?? $id,
-        "period_sum" => $sumAll,
-        "avg_daily" => $avgDaily,
-        "avg_weekday" => $avgWeekday,
-        "avg_weekend" => $avgWeekend,
-        "coverage" => round($coverage, 4),
-        "is_full" => $isFull,
-        "hours_present" => (int)$hours,
-        "hours_expected" => (int)$expectedHours
-      ];
+      $outCounters[$id] = buildCounterDetails($id, $nameById[$id] ?? $id, mergeCounterMonths($details, $ms, $id), $MIN_HOURS_VALID_DAY, $weekdayNamesPL);
+      $aggs = array_map(fn($m) => $agg[$m][$id] ?? emptyAgg(), $ms);
+      $it = buildOverviewItem($id, $nameById[$id] ?? $id, $aggs, $expectedHours, $FULL_COVERAGE_THRESHOLD);
+      $items[] = $it;
+      if ($it["is_full"]) $yearVals[$id][(string)$y] = [$it["avg_daily"], $it["avg_weekday"], $it["avg_weekend"]];
     }
-
+    writeJsonPretty($permDir . "/details_year_" . $y . ".json", [
+      "mode" => "year", "period" => $y, "from" => $from, "to" => $to,
+      "generated_at" => date("c"), "counters" => $outCounters
+    ]);
+    $generatedDetailsY++;
     writeJsonPretty($permDir . "/overview_year_" . $y . ".json", [
-      "mode" => "year",
-      "period" => $y,
-      "from" => $from,
-      "to" => $to,
-      "generated_at" => date("c"),
-      "threshold_full" => $FULL_COVERAGE_THRESHOLD,
-      "items" => $items
+      "mode" => "year", "period" => $y, "from" => $from, "to" => $to,
+      "generated_at" => date("c"), "threshold_full" => $FULL_COVERAGE_THRESHOLD,
+      "min_hours_valid_day" => $MIN_HOURS_VALID_DAY, "items" => $items
     ]);
     $generatedOverviewY++;
   }
+  logln("details_year wygenerowane: " . $generatedDetailsY);
   logln("overview_year wygenerowane: " . $generatedOverviewY);
 
-  // ===== BASELINE YEAR (median over all full years) =====
-  $items = [];
-  foreach ($counters as $id) {
-    $listDaily=[]; $listWeekday=[]; $listWeekend=[];
-    foreach ($availableYears as $y) {
-      $from = $y . "-01-01";
-      $to   = $y . "-12-31";
-      [$daysAll, $daysWeekday, $daysWeekend] = dayCountsRange($from, $to);
-
-      $expectedHours = 0;
-      for ($m=1; $m<=12; $m++) $expectedHours += expectedHoursInMonth(sprintf("%s-%02d",$y,$m));
-
-      $sumAll=0; $sumWd=0; $sumWe=0; $hours=0;
-      for ($m=1; $m<=12; $m++) {
-        $ym = sprintf("%s-%02d", $y, $m);
-        $a = $agg[$ym][$id] ?? null;
-        if (!$a) continue;
-        $sumAll += (int)$a["sum_all"];
-        $sumWd  += (int)$a["sum_weekday"];
-        $sumWe  += (int)$a["sum_weekend"];
-        $hours  += (int)$a["hours_present"];
-      }
-      $coverage = $expectedHours > 0 ? ($hours / $expectedHours) : 0.0;
-      if ($coverage < $FULL_COVERAGE_THRESHOLD) continue;
-
-      $listDaily[]   = $daysAll > 0 ? (int)round($sumAll / $daysAll) : 0;
-      $listWeekday[] = $daysWeekday > 0 ? (int)round($sumWd / $daysWeekday) : 0;
-      $listWeekend[] = $daysWeekend > 0 ? (int)round($sumWe / $daysWeekend) : 0;
-    }
-
-    $items[] = [
-      "id" => $id,
-      "name" => $nameById[$id] ?? $id,
-      "median_daily" => medianInt($listDaily),
-      "median_weekday" => medianInt($listWeekday),
-      "median_weekend" => medianInt($listWeekend),
-      "n_periods" => count($listDaily)
-    ];
-  }
-
-  writeJsonPretty($permDir . "/baseline_median_year.json", [
-    "mode" => "year",
-    "key" => "ALL",
-    "generated_at" => date("c"),
-    "threshold_full" => $FULL_COVERAGE_THRESHOLD,
-    "items" => $items
-  ]);
+  $baselineFile($permDir . "/baseline_median_year.json", "year", "ALL", $yearVals, $availableYears);
   logln("baseline_median_year zapisane.");
 
-  // ===== META =====
+  // ===== RAPORT JAKOŚCI DANYCH =====
+  writeJsonPretty($permDir . "/data_quality.json", [
+    "generated_at" => date("c"),
+    "zero_run_min_hours" => $ZERO_RUN_MIN_HOURS,
+    "min_hours_valid_day" => $MIN_HOURS_VALID_DAY,
+    "excluded_ranges" => $qualityRanges,
+    "skipped_columns" => $skippedCols,
+    "invalid_rows" => $invalidRows
+  ]);
+  logln("data_quality.json zapisane.");
+
+  // ===== META (na końcu: przeglądarka widzi nowe okresy dopiero po wygenerowaniu reszty) =====
   $meta = [
     "generated_at" => date("c"),
     "threshold_full" => $FULL_COVERAGE_THRESHOLD,
+    "min_hours_valid_day" => $MIN_HOURS_VALID_DAY,
+    "zero_run_min_hours" => $ZERO_RUN_MIN_HOURS,
 
     "months" => $availableMonths,
     "quarters" => $availableQuarters,
@@ -1091,7 +763,7 @@ logln("details_year wygenerowane: " . $generatedDetailsY);
   logln("meta_periods.json zapisane.");
 
   $t1 = microtime(true);
-  logln("OK. Czas: " . number_format($t1 - $t0, 2) . " s");
+  logln("OK. Czas: " . number_format($t1 - $t0, 2) . " s, pamięć szczytowa: " . number_format(memory_get_peak_usage(true)/1024/1024, 1) . " MB");
 
 } catch (Throwable $e) {
   echo "<div class='alert alert-danger'><strong>Błąd:</strong> " . htmlspecialchars($e->getMessage()) . "</div>";
