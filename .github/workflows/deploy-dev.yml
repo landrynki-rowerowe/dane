@@ -70,6 +70,26 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y sshpass
 
+      - name: Sprawdz czy sekrety sa ustawione (nie wypisuje wartosci)
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          PORT: ${{ secrets.SSH_PORT }}
+          USER: ${{ secrets.SSH_USER }}
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+          EXPECTED: ${{ secrets.SSH_FINGERPRINT }}
+        run: |
+          set -u
+          bad=0
+          for n in HOST PORT USER SSHPASS EXPECTED; do
+            v="${!n}"
+            echo "$n: dlugosc=${#v}"
+            [ -n "$v" ] || { echo "BRAK SEKRETU: $n"; bad=1; }
+          done
+          # biale znaki na koncu/poczatku hasla i loginu
+          case "$SSHPASS" in *[[:space:]]) echo "UWAGA: haslo konczy sie bialym znakiem"; bad=1;; esac
+          case "$USER" in *[[:space:]]) echo "UWAGA: login konczy sie bialym znakiem"; bad=1;; esac
+          exit $bad
+
       - name: Przygotuj bezpieczne polaczenie SSH
         env:
           HOST: ${{ secrets.SSH_HOST }}
@@ -88,6 +108,19 @@ jobs:
           }
           chmod 600 ~/.ssh/known_hosts
           echo "FINGERPRINT OK"
+
+      - name: Test logowania SSH
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          PORT: ${{ secrets.SSH_PORT }}
+          USER: ${{ secrets.SSH_USER }}
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          set +e
+          sshpass -e ssh -o LogLevel=ERROR -o StrictHostKeyChecking=yes -o ConnectTimeout=20 -p "$PORT" "$USER@$HOST" 'echo LOGIN OK; pwd'
+          rc=$?
+          if [ $rc -eq 5 ]; then echo "SSHPASS 5: serwer odrzucil login/haslo (SSH_USER lub SSH_PASSWORD)"; fi
+          exit $rc
 
       - name: Utworz katalog dane-dev (jesli go nie ma) i zrob kopie
         env:
