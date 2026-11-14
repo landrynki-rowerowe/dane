@@ -649,8 +649,10 @@
   <h2 class="h5 mt-4">Metodologia</h2>
   <p>
     Dane analizowane są w rozdzielczości godzinowej. 
-    „Typowy ruch” odpowiada medianie wartości z analogicznych okresów historycznych.
+    „Typowy ruch” odpowiada medianie średnich z analogicznych okresów historycznych, z pominięciem okresu, który właśnie oglądasz.
     Do analiz uwzględniane są tylko liczniki z pokryciem danych ≥ 95%.
+    Średnie (dzienne, dni powszednich i weekendów) liczone są z dni, w których licznik zarejestrował co najmniej 20 z 24 godzin.
+    Serie co najmniej 48 godzin kolejnych zer w licznikach całodobowych traktujemy jako awarię, a nie brak ruchu – takie godziny są pomijane i widoczne na wykresie jako przerwa.
   </p>
 
   <h2 class="h5 mt-4">Źródła danych</h2>
@@ -682,6 +684,7 @@ W przypadku wykorzystania prosimy o podanie źródła: rowerowy.otwartyplan.org
   const GEOJSON_URL = "./data/counters.geojson";
   const API_URL = "./api/aggregate.php";
 const META_URL = "./cache/permanent/meta_periods.json";
+const MIN_HOURS_VALID_DAY = 20; // dzień z mniejszą liczbą godzin nie wchodzi do średnich (zgodnie z admin/precompute.php)
 const OVERVIEW_URL = (mode, period) => `./cache/permanent/overview_${mode}_${period}.json`;
 const DETAILS_URL = (mode, period) => `./cache/permanent/details_${mode}_${period}.json`;
     const WEATHER_URL = "./data/weather_daily.json"; 
@@ -1676,6 +1679,22 @@ function median(values) {
     : (arr[mid - 1] + arr[mid]) / 2;
 }
 
+// "Typowy ruch" = mediana średnich z analogicznych okresów historycznych, BEZ okresu, który właśnie oglądamy.
+function baselineMediansExcluding(item, excludePeriod) {
+  const by = item?.by_period;
+  if (!by) {
+    // starszy plik baseline bez by_period (przed regeneracją cache): zachowanie dotychczasowe
+    return { daily: item?.median_daily ?? null, weekday: item?.median_weekday ?? null, weekend: item?.median_weekend ?? null, n: item?.n_periods ?? 0 };
+  }
+  const d = [], w = [], e = [];
+  for (const [k, v] of Object.entries(by)) {
+    if (String(k) === String(excludePeriod)) continue;
+    d.push(v.daily); w.push(v.weekday); e.push(v.weekend);
+  }
+  const r = (x) => (x === null ? null : Math.round(x));
+  return { daily: r(median(d)), weekday: r(median(w)), weekend: r(median(e)), n: d.length };
+}
+
 function computeNetworkKeyStats(overview, overviewPrev) {
   const activeNow = (overview?.items || []).filter(it => it.is_full);
   const prevById = Object.fromEntries((overviewPrev?.items || []).map(it => [it.id, it]));
@@ -1691,6 +1710,7 @@ function computeNetworkKeyStats(overview, overviewPrev) {
 
     const prev = prevById[it.id];
     if (!prev) continue;
+    if (prev.is_full === false) continue; // poprzedni okres poniżej progu kompletności – nie porównujemy
 
     const dDaily = pctDelta(it.avg_daily, prev.avg_daily);
     const dWeekday = pctDelta(it.avg_weekday, prev.avg_weekday);
@@ -1759,6 +1779,9 @@ function computeAveragesFromDaily(dailyArr) {
   let sumWe = 0, nWe = 0;
 
   for (const r of dailyArr || []) {
+    // dzień bez danych (przerwa) lub z <20 godzinami nie wchodzi do średnich – tak samo jak w precompute.php
+    if (r.count === null || r.count === undefined) continue;
+    if (r.hours !== undefined && r.hours < MIN_HOURS_VALID_DAY) continue;
     const c = Number(r.count || 0);
     const dow = parseYmdToDow(r.date); // 0 Sun, 6 Sat
     const isWeekend = (dow === 0 || dow === 6);
@@ -2017,16 +2040,19 @@ const weatherStats = computeWeatherStatsForPeriod(now.daily, weatherDaily);
       const baseline = await getBaselineCached();
       const b = baseline?.items?.find(x => x.id === selectedCounterId);
       if (b) {
+        const typ = baselineMediansExcluding(b, periodValue);
         deltasTypical = {
-          daily: pctDelta(avgNow.avg_daily, b.median_daily),
-          weekday: pctDelta(avgNow.avg_weekday, b.median_weekday),
-          weekend: pctDelta(avgNow.avg_weekend, b.median_weekend)
+          daily: pctDelta(avgNow.avg_daily, typ.daily),
+          weekday: pctDelta(avgNow.avg_weekday, typ.weekday),
+          weekend: pctDelta(avgNow.avg_weekend, typ.weekend)
         };
       }
     } catch (e) {}
 
     let deltasYoY = { daily: null, weekday: null, weekend: null };
-    if (prevCounter?.daily) {
+    const prevItem = overviewCtx?.overviewPrev?.items?.find(x => x.id === selectedCounterId);
+    const prevComplete = prevItem ? prevItem.is_full !== false : true;
+    if (prevCounter?.daily && prevComplete) {
       const avgPrev = computeAveragesFromDaily(prevCounter.daily);
       deltasYoY = {
         daily: pctDelta(avgNow.avg_daily, avgPrev.avg_daily),
