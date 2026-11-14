@@ -1,0 +1,216 @@
+{
+    "mode": "month",
+    "key": "06",
+    "generated_at": "2026-11-14T18:18:16+01:00",
+    "threshold_full": 0.95,
+    "items": [
+        {
+            "id": "armii_kr",
+            "name": "Armii Krajowej",
+            "median_daily": 1349,
+            "median_weekday": 1382,
+            "median_weekend": 1230,
+            "n_periods": 6
+        },
+        {
+            "id": "bora_kom",
+            "name": "Bora-Komorowskiego",
+            "median_daily": 1403,
+            "median_weekday": 1508,
+            "median_weekend": 1178,
+            "n_periods": 7
+        },
+        {
+            "id": "brozka",
+            "name": "Brożka",
+            "median_daily": 265,
+            "median_weekday": 287,
+            "median_weekend": 204,
+            "n_periods": 1
+        },
+        {
+            "id": "bulwary",
+            "name": "Bulwary",
+            "median_daily": 3024,
+            "median_weekday": 2820,
+            "median_weekend": 3160,
+            "n_periods": 10
+        },
+        {
+            "id": "dworzec_gl",
+            "name": "Dworzec Główny",
+            "median_daily": 2150,
+            "median_weekday": 2395,
+            "median_weekend": 1473,
+            "n_periods": 9
+        },
+        {
+            "id": "grzegorzecka",
+            "name": "Grzegórzecka",
+            "median_daily": 2486,
+            "median_weekday": 2758,
+            "median_weekend": 1916,
+            "n_periods": 6
+        },
+        {
+            "id": "jancarza",
+            "name": "Jancarza",
+            "median_daily": null,
+            "median_weekday": null,
+            "median_weekend": null,
+            "n_periods": 0
+        },
+        {
+            "id": "kamienskiego",
+            "name": "Kamieńskiego",
+            "median_daily": 1407,
+            "median_weekday": 1523,
+            "median_weekend": 1191,
+            "n_periods": 6
+        },
+        {
+            "id": "klimeckiego",
+            "name": "Klimeckiego",
+            "median_daily": 2048,
+            "median_weekday": 2133,
+            "median_weekend": 1783,
+            "n_periods": 8
+        },
+        {
+            "id": "kopernika",
+            "name": "Kopernika",
+            "median_daily": 2731,
+            "median_weekday": 2987,
+            "median_weekend": 2024,
+            "n_periods": 8
+        },
+        {
+            "id": "kotlarska",
+            "name": "Kotlarska",
+            "median_daily": 2928,
+            "median_weekday": 3286,
+            "median_weekend": 2042,
+            "n_periods": 10
+        },
+        {
+            "id": "mogilska",
+            "name": "Mogilska",
+            "median_daily": 3585,
+            "median_weekday": 4082,
+            "median_weekend": 2310,
+            "n_periods": 10
+        },
+        {
+            "id": "monte_cass",
+            "name": "Monte Cassino",
+            "median_daily": 2759,
+            "median_weekday": 2762,
+            "median_weekend": 2246,
+            "n_periods": 9
+        },
+        {
+            "id": "nawojki",
+            "name": "Nawojki",
+            "median_daily": 877,
+            "median_weekday": 969,
+            "median_weekend": 624,
+            "n_periods": 1
+        },
+        {
+            "id": "niepolomska",
+            "name": "Niepołomska",
+            "median_daily": 1585,
+            "median_weekday": 1338,
+            "median_weekend": 2019,
+            "n_periods": 6
+        },
+        {
+            "id": "nowohucka",
+            "name": "Nowohucka",
+            "median_daily": 1156,
+            "median_weekday": 1201,
+            "median_weekend": 961,
+            "n_periods": 8
+        },
+        {
+            "id": "smolensk",
+            "name": "Smoleńsk",
+            "median_daily": 1146,
+            "median_weekday": 1241,
+            "median_weekend": 807,
+            "n_periods": 9
+        },
+        {
+            "id": "tyniecka",
+            "name": "Tyniecka",
+            "median_daily": 2695,
+            "median_weekday": 2248,
+            "median_weekend": 3516,
+            "n_periods": 9
+        },
+        {
+            "id": "wadowicka",
+            "name": "Wadowicka",
+            "median_daily": 1716,
+            "median_weekday": 1924,
+            "median_weekend": 1132,
+            "n_periods": 10
+        },
+        {
+            "id": "wielicka",
+            "name": "Wielicka",
+            "median_daily": 1754,
+            "median_weekday": 1901,
+            "median_weekend": 1263,
+            "n_periods": 10
+        },
+        {
+            "id": "wielopole",
+            "name": "Wielopole",
+            "median_daily": 1382,
+            "median_weekday": 1497,
+            "median_weekend": 1115,
+            "n_periods": 3
+        },
+        {
+            "id": "chrobrego",
+            "name": "Chrobrego",
+            "median_daily": 235,
+            "median_weekday": 267,
+            "median_weekend": 147,
+            "n_periods": 1
+        },
+        {
+            "id": "czarnowiejska",
+            "name": "Czarnowiejska",
+            "median_daily": 392,
+            "median_weekday": 414,
+            "median_weekend": 341,
+            "n_periods": 1
+        },
+        {
+            "id": "pl_wolnica",
+            "name": "Plac Wolnica",
+            "median_daily": 941,
+            "median_weekday": 946,
+            "median_weekend": 901,
+            "n_periods": 3
+        },
+        {
+            "id": "kamienna",
+            "name": "kamienna",
+            "median_daily": null,
+            "median_weekday": null,
+            "median_weekend": null,
+            "n_periods": 0
+        },
+        {
+            "id": "date_utc_key",
+            "name": "date_utc_key",
+            "median_daily": null,
+            "median_weekday": null,
+            "median_weekend": null,
+            "n_periods": 0
+        }
+    ]
+}
