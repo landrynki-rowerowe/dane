@@ -1,0 +1,153 @@
+name: Publikuj dane-dev
+
+# Reczne uruchomienie: Actions -> "Publikuj dane-dev" -> Run workflow.
+# W polu "ref" mozna podac galez lub tag do przetestowania (domyslnie main).
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Galez/tag do opublikowania w dane-dev"
+        required: true
+        default: "main"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dane-dev-deploy
+  cancel-in-progress: false
+
+env:
+  REMOTE_DIR: rowerowy.otwartyplan.org/public_html/dane-dev
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pobierz kod
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Sprawdz pliki aplikacji
+        run: |
+          set -euo pipefail
+          test -s index.html
+          test -s embed.html
+          test -s admin/precompute.php
+          test -s data/counters.geojson
+          test -d api
+          echo "PLIKI OK"
+
+      - name: Wygeneruj cache (precompute) z kodu tej galezi
+        run: |
+          set -euo pipefail
+          php -v | head -1
+          php -l admin/precompute.php
+          # precompute pobiera CSV z Arkusza Google i zapisuje cache/ obok skryptu
+          php admin/precompute.php | tail -n 20
+          test -s cache/data.csv
+          test -d cache/permanent
+          ls cache/permanent | wc -l
+
+      - name: Zbuduj paczke dev (bez admin/, bez tokenow)
+        run: |
+          set -euo pipefail
+          rm -rf build && mkdir -p build/data
+          cp index.html embed.html build/
+          cp -r api cache build/
+          cp data/counters.geojson data/weather_daily.json build/data/
+          # dev nie ma byc indeksowany
+          printf 'User-agent: *\nDisallow: /\n' > build/robots.txt
+          test -s build/index.html
+          test -s build/cache/permanent/meta_periods.json
+          echo "PACZKA OK"
+
+      - name: Zainstaluj sshpass
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y sshpass
+
+      - name: Przygotuj bezpieczne polaczenie SSH
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          PORT: ${{ secrets.SSH_PORT }}
+          EXPECTED: ${{ secrets.SSH_FINGERPRINT }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -T 15 -p "$PORT" -t ed25519 "$HOST" > ~/.ssh/known_hosts 2>/dev/null
+          test -s ~/.ssh/known_hosts
+          ACTUAL=$(ssh-keygen -lf ~/.ssh/known_hosts -E sha256 | awk '{print $2}')
+          test "$ACTUAL" = "$EXPECTED" || {
+            echo "FINGERPRINT MISMATCH"
+            exit 1
+          }
+          chmod 600 ~/.ssh/known_hosts
+          echo "FINGERPRINT OK"
+
+      - name: Utworz katalog dane-dev (jesli go nie ma) i zrob kopie
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          PORT: ${{ secrets.SSH_PORT }}
+          USER: ${{ secrets.SSH_USER }}
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          set -euo pipefail
+          sshpass -e ssh \
+            -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=20 \
+            -p "$PORT" \
+            "$USER@$HOST" \
+            'set -eu
+             cd "$HOME/rowerowy.otwartyplan.org"
+             test -d public_html
+             test ! -L public_html
+             test ! -L public_html/dane-dev
+             mkdir -p public_html/dane-dev
+             if [ -s public_html/dane-dev/index.html ]; then
+               mkdir -p backup-dane-dev
+               DATE=$(date -u +%Y%m%d-%H%M%S)
+               ARCHIVE="backup-dane-dev/dane-dev-$DATE.tar.gz"
+               tar -czf "$ARCHIVE" -C public_html dane-dev
+               test -s "$ARCHIVE"
+               echo "BACKUP DEV OK: $ARCHIVE"
+             else
+               echo "dane-dev puste - bez kopii"
+             fi
+             # stary cache dev usuwamy, zeby nie zostaly nieaktualne pliki
+             rm -rf public_html/dane-dev/cache/permanent
+             echo "KATALOG DEV OK"'
+
+      - name: Publikuj pliki DEV
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          PORT: ${{ secrets.SSH_PORT }}
+          USER: ${{ secrets.SSH_USER }}
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          set -euo pipefail
+          sshpass -e scp \
+            -o StrictHostKeyChecking=yes \
+            -P "$PORT" \
+            -r \
+            build/. \
+            "$USER@$HOST:${REMOTE_DIR}/"
+          echo "PLIKI PRZESLANE"
+
+      - name: Sprawdz publikacje
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          PORT: ${{ secrets.SSH_PORT }}
+          USER: ${{ secrets.SSH_USER }}
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          set -euo pipefail
+          sshpass -e ssh \
+            -o StrictHostKeyChecking=yes \
+            -p "$PORT" \
+            "$USER@$HOST" \
+            "cd ${REMOTE_DIR} && test -s index.html && test -s cache/permanent/meta_periods.json && test ! -e admin && echo 'DANE DEV DEPLOY OK'"
