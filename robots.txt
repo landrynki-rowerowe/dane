@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rowerowy.otwartyplan.org/dane/sitemap.xml
