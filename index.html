@@ -1706,7 +1706,8 @@ function isTelraamItem(it) {
 
 function computeTelraamStats(overview, overviewPrev) {
   const prevById = Object.fromEntries((overviewPrev?.items || []).map(it => [it.id, it]));
-  return (overview?.items || []).filter(isTelraamItem).map(it => {
+  // czujniki bez żadnych danych w okresie nie są pokazywane w tabeli
+  return (overview?.items || []).filter(it => isTelraamItem(it) && Number(it.hours_present ?? it.coverage ?? 0) > 0).map(it => {
     const prev = prevById[it.id];
     const comparable = it.is_full && prev && prev.is_full !== false;
     return {
