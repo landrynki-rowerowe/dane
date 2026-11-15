@@ -249,7 +249,7 @@ function buildCounterDetails(string $id, string $name, array $m, int $minHours, 
   ];
 }
 // Pozycja overview z zagregowanych miesięcy ($aggs = lista emptyAgg()-podobnych tablic).
-function buildOverviewItem(string $id, string $name, array $aggs, int $expectedHours, float $threshold): array {
+function buildOverviewItem(string $id, string $name, array $aggs, int $expectedHours, float $threshold, string $sensorType = "eco_counter"): array {
   $t = emptyAgg();
   foreach ($aggs as $a) foreach ($t as $k => $_) $t[$k] += (int)($a[$k] ?? 0);
 
@@ -257,6 +257,7 @@ function buildOverviewItem(string $id, string $name, array $aggs, int $expectedH
   return [
     "id" => $id,
     "name" => $name,
+    "sensor_type" => $sensorType,   // "eco_counter" | "telraam" – statystyki sieci liczone tylko z Eco-Counter
     "month_sum" => $t["sum_all"],   // kompatybilność
     "period_sum" => $t["sum_all"],  // suma wszystkich zarejestrowanych godzin (bez wyłączonych serii zer)
     "avg_daily" => avgOf($t["vd_sum_all"], $t["vd_n_all"]),
@@ -269,6 +270,150 @@ function buildOverviewItem(string $id, string $name, array $aggs, int $expectedH
     "hours_expected" => $expectedHours,
     "hours_excluded" => $t["hours_excluded"]
   ];
+}
+
+// ===== Wykrywanie anomalii (flagi do przeglądu; NIE zmieniają liczb poza istniejącymi wyłączeniami serii zer) =====
+// Zwraca listę flag: zera w ciągu dnia (6–47 h), serie >= $zeroMin h (potwierdzenie przez inne liczniki), zaklinowane wartości.
+function detectAnomalies(string $csvPath, array $counters, array $counterIdx, array $isTelraam, int $idxDate, string $dtRe, int $zeroMin): array {
+  $fh = fopen($csvPath, "r");
+  if (!$fh) return [];
+  fgetcsv($fh);
+  $eco = array_values(array_filter($counters, fn($id) => empty($isTelraam[$id])));
+  $actN = []; $presN = []; $dts = [];
+  $zrun = array_fill_keys($eco, 0); $zStart = array_fill_keys($eco, 0);
+  $srun = array_fill_keys($eco, 0); $sStart = array_fill_keys($eco, 0); $sVal = array_fill_keys($eco, null);
+  $hs = []; $hn = [];
+  foreach ($eco as $id) { $hs[$id] = array_fill(0, 24, 0); $hn[$id] = array_fill(0, 24, 0); }
+  $cand = []; $stuck = [];
+  $n = -1;
+
+  $closeZ = function (string $id, int $endRow) use (&$zrun, &$zStart, &$cand, $zeroMin) {
+    $len = $zrun[$id];
+    if ($len >= 6) $cand[] = [$id, $zStart[$id], $endRow, $len];
+    $zrun[$id] = 0;
+  };
+  $closeS = function (string $id, int $endRow) use (&$srun, &$sStart, &$sVal, &$stuck) {
+    if ($srun[$id] >= 8 && $sVal[$id] !== null && $sVal[$id] >= 10) $stuck[] = [$id, $sStart[$id], $endRow, $srun[$id], $sVal[$id]];
+    $srun[$id] = 0; $sVal[$id] = null;
+  };
+
+  while (($row = fgetcsv($fh)) !== false) {
+    $dt = trim((string)($row[$idxDate] ?? ""));
+    if (!preg_match($dtRe, $dt)) continue;
+    $n++;
+    $dts[$n] = $dt;
+    $h = (int)substr($dt, 11, 2);
+    $act = 0; $pres = 0; $vals = [];
+    foreach ($eco as $id) {
+      $vs = trim((string)($row[$counterIdx[$id]] ?? ""));
+      if ($vs === "") { $vals[$id] = null; continue; }
+      $v = (int)preg_replace('/[^0-9]/', '', $vs);
+      $vals[$id] = $v; $pres++; if ($v > 0) $act++;
+      $hs[$id][$h] += $v; $hn[$id][$h]++;
+    }
+    $actN[$n] = $act; $presN[$n] = $pres;
+    foreach ($eco as $id) {
+      $v = $vals[$id];
+      if ($v === 0) { if ($zrun[$id] === 0) $zStart[$id] = $n; $zrun[$id]++; }
+      else { if ($zrun[$id] > 0) $closeZ($id, $n - 1); }
+      if ($v !== null && $v > 0 && $v === $sVal[$id]) { $srun[$id]++; }
+      else { if ($srun[$id] > 0) $closeS($id, $n - 1); if ($v !== null && $v > 0) { $sVal[$id] = $v; $srun[$id] = 1; $sStart[$id] = $n; } }
+    }
+  }
+  fclose($fh);
+  foreach ($eco as $id) { if ($zrun[$id] > 0) $closeZ($id, $n); if ($srun[$id] > 0) $closeS($id, $n); }
+
+  $corro = function (string $id, int $a, int $b) use (&$actN, &$presN) {
+    $sum = 0.0; $m = 0;
+    for ($i = $a; $i <= $b; $i++) {
+      $others = $presN[$i] - 1;   // ten licznik ma w serii zer wpis (0), więc jest w presN
+      if ($others < 3) continue;
+      $sum += $actN[$i] / $others; $m++;
+    }
+    return $m > 0 ? $sum / $m : null;
+  };
+  $sev = function (?float $c): string { return $c === null ? "niska" : ($c >= 0.8 ? "wysoka" : ($c >= 0.5 ? "średnia" : "niska")); };
+
+  $flags = [];
+  foreach ($cand as [$id, $a, $b, $len]) {
+    $day = 0; $expSum = 0.0; $expN = 0;
+    for ($i = $a; $i <= $b; $i++) {
+      $h = (int)substr($dts[$i], 11, 2);
+      if ($h >= 7 && $h <= 20) {
+        $day++;
+        if ($hn[$id][$h] > 0) { $expSum += $hs[$id][$h] / $hn[$id][$h]; $expN++; }
+      }
+    }
+    $exp = $expN > 0 ? $expSum / $expN : 0.0;
+    $c = $corro($id, $a, $b);
+    if ($len >= $zeroMin) {
+      $flags[] = ["counter" => $id, "type" => "seria_zer_wylaczona", "from" => $dts[$a], "to" => $dts[$b], "hours" => $len,
+        "corroboration" => $c === null ? null : round($c, 2), "severity" => $sev($c),
+        "note" => "≥ {$zeroMin} h samych zer; godziny pominięte w statystykach. Inne liczniki w tym czasie miały ruch w " . ($c === null ? "?" : round($c * 100) . "%") . " godzin."];
+    } elseif ($day >= 4 && $exp >= 3.0) {
+      $flags[] = ["counter" => $id, "type" => "zera_w_dzien", "from" => $dts[$a], "to" => $dts[$b], "hours" => $len,
+        "expected_per_hour" => round($exp, 1), "corroboration" => $c === null ? null : round($c, 2), "severity" => $sev($c),
+        "note" => "Seria zer w godzinach dziennych, mimo że w tych godzinach licznik zwykle notuje ok. " . round($exp, 1) . " przejazdów/godz. Dane zostają w statystykach; do przeglądu."];
+    }
+  }
+  foreach ($stuck as [$id, $a, $b, $len, $val]) {
+    $flags[] = ["counter" => $id, "type" => "zaklinowana_wartosc", "from" => $dts[$a], "to" => $dts[$b], "hours" => $len,
+      "value" => $val, "severity" => "niska",
+      "note" => "Ta sama wartość ({$val}) przez {$len} kolejnych godzin. Dane zostają w statystykach; do przeglądu."];
+  }
+  usort($flags, fn($x, $y) => [$x["counter"], $x["from"]] <=> [$y["counter"], $y["from"]]);
+  return $flags;
+}
+
+// Zmiany poziomu: miesięczna średnia dzienna licznika względem mediany sieci Eco, porównana z tym samym miesiącem kalendarzowym w poprzednich latach.
+function detectLevelShifts(array $monthVals, array $isTelraam): array {
+  $byMonth = [];
+  foreach ($monthVals as $id => $per) {
+    if (!empty($isTelraam[$id])) continue;
+    foreach ($per as $ym => $v) { if ($v[0] !== null && $v[0] > 0) $byMonth[$ym][$id] = (float)$v[0]; }
+  }
+  $med = function (array $a): ?float { $a = array_values($a); sort($a); $n = count($a); if (!$n) return null; return $n % 2 ? $a[intdiv($n, 2)] : ($a[$n/2 - 1] + $a[$n/2]) / 2; };
+  $netMed = []; foreach ($byMonth as $ym => $vals) { if (count($vals) >= 5) $netMed[$ym] = $med($vals); }
+  $R = [];
+  foreach ($byMonth as $ym => $vals) { if (!isset($netMed[$ym])) continue; foreach ($vals as $id => $v) $R[$id][$ym] = $v / $netMed[$ym]; }
+  $flags = [];
+  foreach ($R as $id => $series) {
+    ksort($series);
+    $yms = array_keys($series);
+    foreach ($yms as $ym) {
+      $mm = substr($ym, 5, 2); $yy = (int)substr($ym, 0, 4);
+      $prev = [];
+      for ($k = 1; $k <= 3; $k++) { $pk = ($yy - $k) . "-" . $mm; if (isset($series[$pk])) $prev[] = $series[$pk]; }
+      if (count($prev) < 2) continue;
+      $base = $med($prev);
+      $dev = $series[$ym] / $base - 1;
+      if (abs($dev) < 0.40) continue;
+      $next = date("Y-m", strtotime($ym . "-01 +1 month"));
+      if (isset($series[$next]) && $series[$next] / $base - 1 !== 0.0 && (($series[$next] / $base - 1) * $dev) <= 0) continue; // brak utrzymania zmiany
+      $flags[] = ["counter" => $id, "type" => "zmiana_poziomu", "from" => $ym, "to" => $ym, "hours" => null,
+        "deviation_pct" => round($dev * 100), "severity" => "niska",
+        "note" => "Średnia dzienna względem mediany sieci różni się o " . round($dev * 100) . "% od typowej dla tego miesiąca w poprzednich latach (możliwa zmiana lokalizacji, kalibracji lub realna zmiana ruchu)."];
+    }
+  }
+  usort($flags, fn($x, $y) => [$x["counter"], $x["from"]] <=> [$y["counter"], $y["from"]]);
+  // kolejne miesiące tego samego licznika i znaku odchylenia łączymy w jeden przedział
+  $merged = [];
+  foreach ($flags as $f) {
+    $last = count($merged) - 1;
+    if ($last >= 0 && $merged[$last]["counter"] === $f["counter"]
+        && date("Y-m", strtotime($merged[$last]["to"] . "-01 +1 month")) === $f["from"]
+        && ($merged[$last]["deviation_pct"] * $f["deviation_pct"]) > 0) {
+      $merged[$last]["to"] = $f["to"];
+      if (abs($f["deviation_pct"]) > abs($merged[$last]["deviation_pct"])) $merged[$last]["deviation_pct"] = $f["deviation_pct"];
+    } else {
+      $merged[] = $f;
+    }
+  }
+  foreach ($merged as &$m) {
+    $m["note"] = "Średnia dzienna względem mediany sieci Eco różni się o " . $m["deviation_pct"] . "% (maks. w przedziale) od typowej dla tych miesięcy w poprzednich latach. Możliwa zmiana lokalizacji, kalibracji lub realna zmiana ruchu (np. roboty drogowe, pandemia).";
+  }
+  unset($m);
+  return $merged;
 }
 function loadExclusions(string $path): array {
   if (!is_file($path)) return [];
@@ -443,6 +588,8 @@ try {
     $excl[$id] = $merged;
   }
   logln("Wykryte serie zer / wyłączenia: " . count($qualityRanges));
+  $anomalyFlags = detectAnomalies($csvCache, $counters, $counterIdx, $isTelraam, $idxDate, $DT_RE, $ZERO_RUN_MIN_HOURS);
+  logln("Flagi anomalii (zera w dzień, serie zer, zaklinowane wartości): " . count($anomalyFlags));
 
   // ===== PRZEBIEG 2: agregacja =====
   $fh = fopen($csvCache, "r");
@@ -553,7 +700,7 @@ try {
 
     $items = [];
     foreach ($counters as $id) {
-      $items[] = buildOverviewItem($id, $nameById[$id] ?? $id, [$agg[$ym][$id] ?? emptyAgg()], $expectedHours, $FULL_COVERAGE_THRESHOLD);
+      $items[] = buildOverviewItem($id, $nameById[$id] ?? $id, [$agg[$ym][$id] ?? emptyAgg()], $expectedHours, $FULL_COVERAGE_THRESHOLD, $isTelraam[$id] ? "telraam" : "eco_counter");
     }
     writeJsonPretty($permDir . "/overview_month_" . $ym . ".json", [
       "mode" => "month", "period" => $ym, "from" => $from, "to" => $to,
@@ -606,7 +753,7 @@ try {
   $monthVals = [];
   foreach ($counters as $id) {
     foreach ($availableMonths as $ym) {
-      $it = buildOverviewItem($id, "", [$agg[$ym][$id] ?? emptyAgg()], expectedHoursInMonth($ym), $FULL_COVERAGE_THRESHOLD);
+      $it = buildOverviewItem($id, "", [$agg[$ym][$id] ?? emptyAgg()], expectedHoursInMonth($ym), $FULL_COVERAGE_THRESHOLD, $isTelraam[$id] ? "telraam" : "eco_counter");
       if ($it["is_full"]) $monthVals[$id][$ym] = [$it["avg_daily"], $it["avg_weekday"], $it["avg_weekend"]];
     }
   }
@@ -650,7 +797,7 @@ try {
     foreach ($counters as $id) {
       $outCounters[$id] = buildCounterDetails($id, $nameById[$id] ?? $id, mergeCounterMonths($details, $ms, $id), $MIN_HOURS_VALID_DAY, $weekdayNamesPL);
       $aggs = array_map(fn($m) => $agg[$m][$id] ?? emptyAgg(), $ms);
-      $it = buildOverviewItem($id, $nameById[$id] ?? $id, $aggs, $expectedHours, $FULL_COVERAGE_THRESHOLD);
+      $it = buildOverviewItem($id, $nameById[$id] ?? $id, $aggs, $expectedHours, $FULL_COVERAGE_THRESHOLD, $isTelraam[$id] ? "telraam" : "eco_counter");
       $items[] = $it;
       if ($it["is_full"]) $quarterVals[$id][$yq] = [$it["avg_daily"], $it["avg_weekday"], $it["avg_weekend"]];
     }
@@ -708,7 +855,7 @@ try {
     foreach ($counters as $id) {
       $outCounters[$id] = buildCounterDetails($id, $nameById[$id] ?? $id, mergeCounterMonths($details, $ms, $id), $MIN_HOURS_VALID_DAY, $weekdayNamesPL);
       $aggs = array_map(fn($m) => $agg[$m][$id] ?? emptyAgg(), $ms);
-      $it = buildOverviewItem($id, $nameById[$id] ?? $id, $aggs, $expectedHours, $FULL_COVERAGE_THRESHOLD);
+      $it = buildOverviewItem($id, $nameById[$id] ?? $id, $aggs, $expectedHours, $FULL_COVERAGE_THRESHOLD, $isTelraam[$id] ? "telraam" : "eco_counter");
       $items[] = $it;
       if ($it["is_full"]) $yearVals[$id][(string)$y] = [$it["avg_daily"], $it["avg_weekday"], $it["avg_weekend"]];
     }
@@ -730,12 +877,16 @@ try {
   $baselineFile($permDir . "/baseline_median_year.json", "year", "ALL", $yearVals, $availableYears);
   logln("baseline_median_year zapisane.");
 
+  $levelFlags = detectLevelShifts($monthVals, $isTelraam);
+  logln("Flagi zmiany poziomu: " . count($levelFlags));
+
   // ===== RAPORT JAKOŚCI DANYCH =====
   writeJsonPretty($permDir . "/data_quality.json", [
     "generated_at" => date("c"),
     "zero_run_min_hours" => $ZERO_RUN_MIN_HOURS,
     "min_hours_valid_day" => $MIN_HOURS_VALID_DAY,
     "excluded_ranges" => $qualityRanges,
+    "flags" => array_merge($anomalyFlags, $levelFlags),
     "skipped_columns" => $skippedCols,
     "invalid_rows" => $invalidRows
   ]);

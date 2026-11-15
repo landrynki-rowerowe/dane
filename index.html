@@ -113,6 +113,8 @@
       background: #eee;
     } 
     #map { width: 100%; height: 100%; }
+    #mapLegend { position: absolute; left: .6rem; bottom: .6rem; z-index: 2; background: rgba(255,255,255,.9); border-radius: .5rem; padding: .25rem .5rem; font-size: .75rem; color: #212529; box-shadow: 0 .1rem .3rem rgba(0,0,0,.15); }
+    #mapLegend .dot { display:inline-block; width:.7rem; height:.7rem; border-radius:50%; margin-right:.3rem; vertical-align:-1px; border:1px solid #fff; }
       #mapLogoLink{
   position:absolute;
   top:12px;
@@ -413,6 +415,7 @@
   </a>
             
   <div id="map"></div>
+  <div id="mapLegend"><span class="dot" style="background:#0d6efd"></span>dane kompletne &nbsp; <span class="dot" style="background:#adb5bd"></span>dane niekompletne (awaria/brak)</div>
             
 <button id="otherMapsBtn"
         type="button"
@@ -473,9 +476,10 @@
   <div class="card-body">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
       <h2 class="h6 mb-0">Kluczowe dane sieci</h2>
-      <div class="text-secondary small">Liczniki z kompletnością danych ≥95%</div>
+      <div class="text-secondary small">Liczniki Eco-Counter (pętle indukcyjne, całodobowe) z kompletnością danych ≥95%</div>
     </div>
     <div class="row g-2 mt-1" id="networkKeyStatsGrid"></div>
+    <div class="mt-3 d-none" id="telraamStatsBox"></div>
   </div>
 </div>          
               
@@ -503,6 +507,7 @@
       <div class="text-secondary small" id="keyStatsModeHint"></div>
     </div>
 
+    <div id="incompleteBanner" class="alert alert-warning small mt-3 mb-0 d-none" role="alert"></div>
     <div id="counterTextBox" class="mt-3 d-none"></div>
 
     <div class="row g-2 mt-1" id="keyStatsGrid"></div>
@@ -650,7 +655,7 @@
   <p>
     Dane analizowane są w rozdzielczości godzinowej. 
     „Typowy ruch” odpowiada medianie średnich z analogicznych okresów historycznych, z pominięciem okresu, który właśnie oglądasz.
-    Do analiz uwzględniane są tylko liczniki z pokryciem danych ≥ 95%.
+    Do analiz uwzględniane są tylko liczniki z pokryciem danych ≥ 95%. Pandemiczne lata 2020–2021 nie były typowe, dlatego przy porównaniach pokazujemy drugi wariant typowego ruchu, liczony bez nich.
     Średnie (dzienne, dni powszednich i weekendów) liczone są z dni, w których licznik zarejestrował co najmniej 20 z 24 godzin.
     Serie co najmniej 48 godzin kolejnych zer w licznikach całodobowych traktujemy jako awarię, a nie brak ruchu – takie godziny są pomijane i widoczne na wykresie jako przerwa.
   </p>
@@ -660,7 +665,7 @@
     Dane pochodzą z systemu 19 liczników rowerowych (pętli indukcyjnych zatopionych w nawierzchni drogi dla rowerów) miasta Krakowa rejestrujących ruch przez całą dobę. Strona prezentuje także dane z 4 optycznych czujników Telraam, które liczą rowerzystów tylko w świetle dziennym. Dane meteorologiczne pochodzą z IMGW.</p>
 <p>
 Czujniki całodobowe: Armii Krajowej, Bora-Komorowskiego, Brożka, Bulwary, Dworzec Główny, Grzegórzecka, Kamieńskiego, Klimeckiego, Kopernika, Kotlarska, Mogilska, Monte Cassino, Nawojki, Niepołomska, Nowohucka, Smoleńsk, Tyniecka, Wadowicka, Wielicka.<br/>
-Czujniki Telraam: Chrobrego, Czarnowiejska, Plac Wolnica, Wielopole.
+Czujniki Telraam: Chrobrego, Czarnowiejska, Plac Wolnica, Wielopole. Statystyki „Kluczowe dane sieci” obejmują wyłącznie liczniki Eco-Counter; czujniki Telraam są pokazane osobno, bo liczą tylko w świetle dziennym.
   </p>
     <p>Dane prezentowane na stronie są dostępne publicznie
 i mogą być wykorzystywane w analizach, publikacjach
@@ -846,6 +851,7 @@ function hideDetails() {
   subtitle.textContent = "Kliknij w punkt na mapie…";
 
   document.getElementById("resetSelectionBtn")?.classList.add("d-none");
+  renderIncompleteBanner(null);
   document.getElementById("counterTextBox")?.classList.add("d-none");
   const box = document.getElementById("counterTextBox");
   if (box) box.innerHTML = "";
@@ -1388,8 +1394,11 @@ trackEvent("change_period", {
 
 const activeItems = (overview.items || []).filter(it => it.is_full);
 const activeIds = activeItems.map(it => it.id);
+// na mapie pokazujemy też liczniki niekompletne (przygaszone), jeśli w okresie mają jakiekolwiek dane lub wyłączone godziny awarii
+const visibleIds = (overview.items || []).filter(it => it.is_full || Number(it.hours_present || 0) > 0 || Number(it.hours_excluded || 0) > 0).map(it => it.id);
+window.visibleCounterIds = visibleIds;
 
-if (selectedCounterId && !activeIds.includes(selectedCounterId)) {
+if (selectedCounterId && !visibleIds.includes(selectedCounterId)) {
   selectedCounterId = null;
   selectedCounterName = null;
 
@@ -1407,12 +1416,12 @@ window.activeCounterIds = activeIds;
 
 // filtr punktów na mapie (tylko te, które mają >=95% pokrycia w okresie)
 if (map.getLayer("counters-circle")) {
-  map.setFilter("counters-circle", ["in", ["get", "id"], ["literal", activeIds]]);
+  map.setFilter("counters-circle", ["in", ["get", "id"], ["literal", visibleIds]]);
 }
 if (map.getLayer("counters-selected")) {
   // ważne: selected layer też filtrujemy, żeby nie wyświetlał “martwych”
   map.setFilter("counters-selected", ["all",
-    ["in", ["get", "id"], ["literal", activeIds]],
+    ["in", ["get", "id"], ["literal", visibleIds]],
     ["==", ["get", "id"], selectedCounterId ?? "__none__"]
   ]);
 }
@@ -1427,6 +1436,7 @@ if (map.getLayer("counters-selected")) {
 
 const networkStats = computeNetworkKeyStats(overview, overviewPrev);
 renderNetworkKeyStats(networkStats);
+renderTelraamStats(computeTelraamStats(overview, overviewPrev));
 
 // odmaluj mapę
 await applyMapSizingFromOverview(overview);
@@ -1460,6 +1470,7 @@ async function applyMapSizingFromOverview(overview) {
   f.properties.month_sum = sumById[id] ?? 0;
 
   const it = overview.items.find(x => x.id === id);
+  f.properties.is_full = it ? !!it.is_full : false;
   if (!f.properties.name && it?.name) {
     f.properties.name = it.name;
   }
@@ -1472,10 +1483,14 @@ async function applyMapSizingFromOverview(overview) {
   src.setData(gj);
 
   const radiusExpr = [
-    "interpolate", ["linear"],
-    ["to-number", ["coalesce", ["get", "month_sum"], 0]],
-    0, 4,
-    maxSum, 18
+    "case", ["==", ["get", "is_full"], false],
+    6, // niekompletne: stały mały promień (nie skalujemy do sumy, bo nie jest wiarygodna)
+    [
+      "interpolate", ["linear"],
+      ["to-number", ["coalesce", ["get", "month_sum"], 0]],
+      0, 4,
+      maxSum, 18
+    ]
   ];
 
   if (map.getLayer("counters-circle")) {
@@ -1523,8 +1538,8 @@ map.addLayer({
     "circle-radius": 8,
     "circle-stroke-width": 2,
     "circle-stroke-color": "#ffffff",
-    "circle-opacity": 0.7,
-    "circle-color": "#0d6efd"
+    "circle-opacity": ["case", ["==", ["get", "is_full"], false], 0.55, 0.7],
+    "circle-color": ["case", ["==", ["get", "is_full"], false], "#adb5bd", "#0d6efd"]
   }
 });
 
@@ -1534,7 +1549,7 @@ map.addLayer({
   source: "counters",
   paint: {
     "circle-radius": 8,
-    "circle-color": "#0d6efd",
+    "circle-color": ["case", ["==", ["get", "is_full"], false], "#adb5bd", "#0d6efd"],
     "circle-opacity": 1,
     "circle-stroke-width": 3,
     "circle-stroke-color": "#111"
@@ -1573,7 +1588,7 @@ initPeriodNavUI();
 await loadPeriod(periodMode, periodValue);
 
 const initialCounterId = initialState.licznik;
-if (initialCounterId && window.activeCounterIds?.includes(initialCounterId)) {
+if (initialCounterId && window.visibleCounterIds?.includes(initialCounterId)) {
   selectedCounterId = initialCounterId;
   selectedCounterName = counterNameById?.[initialCounterId] || initialCounterId;
 
@@ -1680,7 +1695,8 @@ function median(values) {
 }
 
 // "Typowy ruch" = mediana średnich z analogicznych okresów historycznych, BEZ okresu, który właśnie oglądamy.
-function baselineMediansExcluding(item, excludePeriod) {
+const COVID_YEARS = ["2020", "2021"]; // lata pandemii: drugi wariant "typowego ruchu" ich nie uwzględnia
+function baselineMediansExcluding(item, excludePeriod, skipYears = []) {
   const by = item?.by_period;
   if (!by) {
     // starszy plik baseline bez by_period (przed regeneracją cache): zachowanie dotychczasowe
@@ -1689,14 +1705,40 @@ function baselineMediansExcluding(item, excludePeriod) {
   const d = [], w = [], e = [];
   for (const [k, v] of Object.entries(by)) {
     if (String(k) === String(excludePeriod)) continue;
+    if (skipYears.includes(String(k).slice(0, 4))) continue;
     d.push(v.daily); w.push(v.weekday); e.push(v.weekend);
   }
   const r = (x) => (x === null ? null : Math.round(x));
   return { daily: r(median(d)), weekday: r(median(w)), weekend: r(median(e)), n: d.length };
 }
 
+// Czujniki optyczne Telraam liczą tylko w świetle dziennym, więc nie wchodzą do statystyk sieci Eco-Counter.
+const TELRAAM_IDS_FALLBACK = ["chrobrego", "czarnowiejska", "pl_wolnica", "wielopole"];
+function isTelraamItem(it) {
+  if (it?.sensor_type) return String(it.sensor_type).toLowerCase().includes("telraam");
+  return TELRAAM_IDS_FALLBACK.includes(it?.id); // starszy cache bez sensor_type
+}
+
+function computeTelraamStats(overview, overviewPrev) {
+  const prevById = Object.fromEntries((overviewPrev?.items || []).map(it => [it.id, it]));
+  // czujniki bez żadnych danych w okresie nie są pokazywane w tabeli
+  return (overview?.items || []).filter(it => isTelraamItem(it) && Number(it.hours_present ?? it.coverage ?? 0) > 0).map(it => {
+    const prev = prevById[it.id];
+    const comparable = it.is_full && prev && prev.is_full !== false;
+    return {
+      id: it.id,
+      name: it.name || it.id,
+      is_full: !!it.is_full,
+      coverage: it.coverage,
+      period_sum: Number(it.period_sum ?? it.month_sum ?? 0),
+      avg_daily: it.avg_daily,
+      yoyDaily: comparable ? pctDelta(it.avg_daily, prev.avg_daily) : null
+    };
+  });
+}
+
 function computeNetworkKeyStats(overview, overviewPrev) {
-  const activeNow = (overview?.items || []).filter(it => it.is_full);
+  const activeNow = (overview?.items || []).filter(it => it.is_full && !isTelraamItem(it));
   const prevById = Object.fromEntries((overviewPrev?.items || []).map(it => [it.id, it]));
 
   const deltasDaily = [];
@@ -1848,11 +1890,50 @@ function renderNetworkKeyStats(stats) {
 
 <div class="col-12 col-md-6 col-xl-3">
       <div class="border rounded-3 p-3 h-100">
-        <div class="text-secondary small mb-1">Suma przejazdów</div>
+        <div class="text-secondary small mb-1">Suma przejazdów (Eco-Counter)</div>
         <div class="fs-4 fw-semibold">${Number(stats.totalSum || 0).toLocaleString("pl-PL")}</div>
       </div>
     </div>    
   `;
+}
+
+function renderIncompleteBanner(item) {
+  const el = document.getElementById("incompleteBanner");
+  if (!el) return;
+  if (!item) { el.classList.add("d-none"); el.innerHTML = ""; return; }
+  const pct = Math.round(Number(item.coverage || 0) * 100);
+  const excl = Number(item.hours_excluded || 0);
+  const exclTxt = excl > 0 ? ` Wykryto ${excl.toLocaleString("pl-PL")} godz. z zerami wyglądającymi na awarię licznika (pominięte).` : "";
+  el.innerHTML = `<strong>Dane niekompletne w tym okresie: ${pct}% godzin.</strong>${exclTxt}
+    Wartości poniżej są orientacyjne: ten licznik nie jest uwzględniany w sumach i statystykach sieci,
+    a porównania do typowego ruchu i do ubiegłego roku nie są wyliczane (próg kompletności: 95%).`;
+  el.classList.remove("d-none");
+}
+
+function renderTelraamStats(list) {
+  const box = document.getElementById("telraamStatsBox");
+  if (!box) return;
+  if (!list.length) { box.classList.add("d-none"); box.innerHTML = ""; return; }
+
+  const esc = (t) => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const rows = list.map(t => `
+    <tr>
+      <td>${esc(t.name)}</td>
+      <td class="text-end">${t.is_full ? t.period_sum.toLocaleString("pl-PL") : "—"}</td>
+      <td class="text-end">${t.is_full && t.avg_daily !== null ? Number(t.avg_daily).toLocaleString("pl-PL") : "—"}</td>
+      <td class="text-end">${t.yoyDaily === null ? "—" : renderDeltaBadge(t.yoyDaily)}</td>
+      <td class="text-end">${t.coverage === undefined ? "—" : Math.round(t.coverage * 100) + "%"}</td>
+    </tr>`).join("");
+
+  box.classList.remove("d-none");
+  box.innerHTML = `
+    <div class="text-secondary small mb-1">Czujniki Telraam (optyczne, tylko w świetle dziennym) – osobno, nie wchodzą do statystyk sieci</div>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead><tr><th>Czujnik</th><th class="text-end">Suma</th><th class="text-end">Śr. dzienna</th><th class="text-end">Zmiana r/r</th><th class="text-end">Pokrycie</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
 }
 
 function renderCounterTextFromGeoJSON(counterId) {
@@ -1890,13 +1971,14 @@ function renderCounterTextFromGeoJSON(counterId) {
   box.classList.remove("d-none");
 }
 
-function renderKeyStats({ total, precipTotal, warmestDay, avg, bestDay, deltasTypical, deltasYoY }) {
+function renderKeyStats({ total, precipTotal, warmestDay, avg, bestDay, deltasTypical, deltasTypicalNoCovid, deltasYoY }) {
   const grid = document.getElementById("keyStatsGrid");
   if (!grid) return;
 
-  const comparisonBlock = (pctT, pctY) => `
+  const comparisonBlock = (pctT, pctY, pctT2) => `
   <div class="d-flex gap-3 small mt-2 flex-wrap">
     <div>${renderDeltaBadge(pctT)} <span class="text-secondary">do typowego ruchu</span></div>
+    ${pctT2 === undefined || pctT2 === null ? "" : `<div>${renderDeltaBadge(pctT2)} <span class="text-secondary">do typowego ruchu bez 2020–2021</span></div>`}
     <div>${renderDeltaBadge(pctY)} <span class="text-secondary">do roku wcześniej</span></div>
   </div>
 `;
@@ -1942,7 +2024,7 @@ function renderKeyStats({ total, precipTotal, warmestDay, avg, bestDay, deltasTy
       <div class="border rounded-3 p-3 h-100">
         <div class="text-secondary small mb-1">Średnia dzienna</div>
         <div class="fs-4 fw-semibold">${avg.avg_daily.toLocaleString("pl-PL")}</div>
-        ${comparisonBlock(deltasTypical.daily, deltasYoY.daily)}
+        ${comparisonBlock(deltasTypical.daily, deltasYoY.daily, deltasTypicalNoCovid?.daily)}
       </div>
     </div>
 
@@ -1959,7 +2041,7 @@ function renderKeyStats({ total, precipTotal, warmestDay, avg, bestDay, deltasTy
       <div class="border rounded-3 p-3 h-100">
         <div class="text-secondary small mb-1">Średnia dnia powszedniego</div>
         <div class="fs-4 fw-semibold">${avg.avg_weekday.toLocaleString("pl-PL")}</div>
-       ${comparisonBlock(deltasTypical.weekday, deltasYoY.weekday)}
+       ${comparisonBlock(deltasTypical.weekday, deltasYoY.weekday, deltasTypicalNoCovid?.weekday)}
       </div>
     </div>
 
@@ -1967,7 +2049,7 @@ function renderKeyStats({ total, precipTotal, warmestDay, avg, bestDay, deltasTy
       <div class="border rounded-3 p-3 h-100">
         <div class="text-secondary small mb-1">Średnia weekendowa</div>
         <div class="fs-4 fw-semibold">${avg.avg_weekend.toLocaleString("pl-PL")}</div>
-        ${comparisonBlock(deltasTypical.weekend, deltasYoY.weekend)}
+        ${comparisonBlock(deltasTypical.weekend, deltasYoY.weekend, deltasTypicalNoCovid?.weekend)}
       </div>
     </div>
   `;
@@ -2035,8 +2117,13 @@ renderHourlySplit(now.hourly_weekday, now.hourly_weekend, prevW, prevE);
     const avgNow = computeAveragesFromDaily(now.daily);
 const weatherStats = computeWeatherStatsForPeriod(now.daily, weatherDaily);
 
+    const selItem = (currentOverview?.items || []).find(x => x.id === selectedCounterId);
+    const isIncomplete = !!selItem && !selItem.is_full;
+    renderIncompleteBanner(isIncomplete ? selItem : null);
+
     let deltasTypical = { daily: null, weekday: null, weekend: null };
-    try {
+    let deltasTypicalNoCovid = { daily: null, weekday: null, weekend: null };
+    if (!isIncomplete) try {
       const baseline = await getBaselineCached();
       const b = baseline?.items?.find(x => x.id === selectedCounterId);
       if (b) {
@@ -2046,13 +2133,21 @@ const weatherStats = computeWeatherStatsForPeriod(now.daily, weatherDaily);
           weekday: pctDelta(avgNow.avg_weekday, typ.weekday),
           weekend: pctDelta(avgNow.avg_weekend, typ.weekend)
         };
+        if (b.by_period) {
+          const typ2 = baselineMediansExcluding(b, periodValue, COVID_YEARS);
+          deltasTypicalNoCovid = {
+            daily: pctDelta(avgNow.avg_daily, typ2.daily),
+            weekday: pctDelta(avgNow.avg_weekday, typ2.weekday),
+            weekend: pctDelta(avgNow.avg_weekend, typ2.weekend)
+          };
+        }
       }
     } catch (e) {}
 
     let deltasYoY = { daily: null, weekday: null, weekend: null };
     const prevItem = overviewCtx?.overviewPrev?.items?.find(x => x.id === selectedCounterId);
     const prevComplete = prevItem ? prevItem.is_full !== false : true;
-    if (prevCounter?.daily && prevComplete) {
+    if (!isIncomplete && prevCounter?.daily && prevComplete) {
       const avgPrev = computeAveragesFromDaily(prevCounter.daily);
       deltasYoY = {
         daily: pctDelta(avgNow.avg_daily, avgPrev.avg_daily),
@@ -2068,6 +2163,7 @@ const weatherStats = computeWeatherStatsForPeriod(now.daily, weatherDaily);
   avg: avgNow,
   bestDay: now.best_day ?? null,
   deltasTypical,
+  deltasTypicalNoCovid,
   deltasYoY
 });
 
